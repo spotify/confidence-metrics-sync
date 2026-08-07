@@ -1,0 +1,29 @@
+measurements:
+  - display_name: Nothing Set
+    fact_table: Somewhere
+    entity: user
+  - display_name: Mixed Up
+    fact_table: Somewhere
+    entity: user
+    measure: m
+    operation: sum
+    numerator:
+      measure: m
+      operation: sum
+    denominator:
+      measure: m
+      operation: sum
+  - display_name: Only Measure
+    fact_table: Somewhere
+    entity: user
+    measure: m
+  - display_name: Only Numerator
+    fact_table: Somewhere
+    entity: user
+    numerator:
+      measure: m
+      operation: sum
+  - display_name: Sum Without Measure
+    fact_table: Somewhere
+    entity: user
+    operation: sum

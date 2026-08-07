@@ -1,0 +1,8 @@
+metrics:
+  - display_name: Inline Attempt
+    entity: user
+    numerator:
+      measure: value
+      operation: sum
+    measurement_window:
+      aggregation_window: 86400s

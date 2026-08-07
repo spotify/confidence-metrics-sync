@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: confidence-metrics-sync
+  description: Manage Confidence metrics as code with YAML and GitHub Actions
+  annotations:
+    github.com/project-slug: spotify/confidence-metrics-sync
+spec:
+  type: tool
+  lifecycle: experimental
+  owner: konfidens

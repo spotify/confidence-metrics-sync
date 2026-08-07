@@ -1,0 +1,9 @@
+metrics:
+  - display_name: First Doc
+    entity: user
+    measurement: M
+---
+metrics:
+  - display_name: Second Doc
+    entity: user
+    measurement: M

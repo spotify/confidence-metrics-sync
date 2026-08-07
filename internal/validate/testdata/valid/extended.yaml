@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/spotify/confidence-metrics-sync/main/internal/schema/metric.schema.json
+# Exercises schema extensions: labels, units, variance reduction, window types.
+
+fact_tables:
+  - display_name: Revenue Events
+    sql: |-
+      SELECT user_id, event_time, revenue_usd, page_views
+      FROM analytics.prod.revenue
+      WHERE event_time BETWEEN TIMESTAMP({START_TIME}) AND TIMESTAMP({END_TIME})
+    timestamp_column: event_time
+    entities:
+      - entity: user
+        column: user_id
+    measures:
+      - display_name: revenue
+        column: revenue_usd
+        unit:
+          currency_code: USD
+      - display_name: page_views
+        column: page_views
+        unit:
+          custom_unit: view
+    owner: identities/revenue-team
+    labels:
+      team: growth
+      domain: monetization
+
+measurements:
+  - display_name: Total Revenue
+    fact_table: Revenue Events
+    entity: user
+    owner: identities/revenue-team
+    measure: revenue
+    operation: sum
+    labels:
+      guardrail: "true"
+    metrics:
+      - display_name: Revenue - Day 1
+        measurement_window:
+          aggregation_window: 86400s
+        labels:
+          tier: primary
+        variance_reduction:
+          enabled: true
+          pre_exposure_window: 604800s
+      - display_name: Revenue - Cumulative
+        measurement_window:
+          type: open
+        variance_reduction:
+          enabled: false
+      - display_name: Revenue - Semi Open Week
+        measurement_window:
+          type: semi_open
+          aggregation_window: 604800s

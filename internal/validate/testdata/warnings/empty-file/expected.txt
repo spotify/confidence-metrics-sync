@@ -1,0 +1,2 @@
+testdata/warnings/empty-file/metrics.yaml: warning[no-definitions]: file contains no YAML document
+✓ 1 file(s) valid, 1 warning(s)

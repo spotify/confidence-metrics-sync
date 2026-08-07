@@ -1,0 +1,29 @@
+fact_tables:
+  - display_name: Events
+    table: a.b.c
+    timestamp_column: t
+    entities:
+      - entity: user
+        column: user_id
+    measures:
+      - display_name: m
+        column: c
+
+measurements:
+  - display_name: Bad Operation
+    fact_table: Events
+    entity: user
+    measure: m
+    operation: total
+
+metrics:
+  - display_name: Bad Window
+    entity: user
+    measurement: Bad Operation
+    default_effect_size: -0.5
+    measurement_window:
+      aggregation_window: 1 day
+  - display_name: Zero Effect
+    entity: user
+    measurement: Bad Operation
+    default_effect_size: 0

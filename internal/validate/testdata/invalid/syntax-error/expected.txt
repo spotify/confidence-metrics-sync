@@ -1,0 +1,2 @@
+testdata/invalid/syntax-error/metrics.yaml:3: error[yaml]: mapping values are not allowed in this context
+✗ 1 error(s), 0 warning(s) in 1 file(s)

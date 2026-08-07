@@ -1,0 +1,11 @@
+fact_tables:
+  - display_name: Dup Keys
+    table: a.b.c
+    table: d.e.f
+    timestamp_column: t
+    entities:
+      - entity: user
+        column: user_id
+    measures:
+      - display_name: m
+        column: c

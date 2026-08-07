@@ -1,0 +1,2 @@
+testdata/invalid/multi-document/metrics.yaml: error[multi-document]: file contains more than one YAML document; define everything in a single document
+✗ 1 error(s), 0 warning(s) in 1 file(s)

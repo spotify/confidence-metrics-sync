@@ -1,0 +1,3 @@
+fact_tables:
+  - display_name: Broken
+     table: too.deep.indent

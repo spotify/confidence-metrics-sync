@@ -1,0 +1,9 @@
+fact_tables:
+  - display_name: No Timestamp
+    table: a.b.c
+    entities:
+      - entity: user
+        column: user_id
+    measures:
+      - display_name: m
+        column: c

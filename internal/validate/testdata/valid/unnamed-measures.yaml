@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/spotify/confidence-metrics-sync/main/internal/schema/metric.schema.json
+# Exercises unnamed measures (display_name optional, column is the reference).
+
+fact_tables:
+  - display_name: Simple Events
+    sql: SELECT user_id, ts, value FROM events
+    timestamp_column: ts
+    entities:
+      - entity: user
+        column: user_id
+    measures:
+      - column: value
+
+measurements:
+  - display_name: Simple Sum
+    fact_table: Simple Events
+    entity: user
+    measure: value
+    operation: sum

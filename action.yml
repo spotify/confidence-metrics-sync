@@ -1,0 +1,55 @@
+name: Confidence Metrics
+description: Validate and sync Confidence metrics defined as YAML
+author: Spotify
+
+inputs:
+  path:
+    description: Directory containing metric definition YAML files
+    required: false
+    default: metrics
+  mode:
+    description: Operation to run; validate on pull requests or sync after merge
+    required: false
+    default: validate
+  client-id:
+    description: Confidence API client ID
+    required: false
+  client-secret:
+    description: Confidence API client secret
+    required: false
+  source-reference:
+    description: Stable repository identifier used to scope reconciliation; defaults to github.com/owner/repository
+    required: false
+  offline:
+    description: Run schema-only validation without API credentials
+    required: false
+    default: "false"
+  adopt-from:
+    description: Newline-separated source references to adopt from during a one-time migration
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Install Confidence metrics CLI
+      shell: bash
+      env:
+        CONFIDENCE_METRICS_RELEASE_ROOT: https://github.com/spotify/confidence-metrics-sync/releases/download
+        CONFIDENCE_METRICS_VERSION: 0.0.0 # x-release-please-version
+      run: "$GITHUB_ACTION_PATH/scripts/install.sh"
+
+    - name: Run Confidence metrics
+      shell: bash
+      env:
+        CONFIDENCE_CLIENT_ID: ${{ inputs.client-id }}
+        CONFIDENCE_CLIENT_SECRET: ${{ inputs.client-secret }}
+        INPUT_ADOPT_FROM: ${{ inputs.adopt-from }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_OFFLINE: ${{ inputs.offline }}
+        INPUT_PATH: ${{ inputs.path }}
+        INPUT_SOURCE_REFERENCE: ${{ inputs.source-reference }}
+      run: "$GITHUB_ACTION_PATH/scripts/run-action.sh"
+
+branding:
+  icon: bar-chart-2
+  color: green

@@ -1,0 +1,2 @@
+testdata/invalid/inline-aggregation/metrics.yaml:4: error[unknown-field]: unknown field "numerator" — metrics do not define aggregation inline; define it on a measurement and reference the measurement by display name
+✗ 1 error(s), 0 warning(s) in 1 file(s)

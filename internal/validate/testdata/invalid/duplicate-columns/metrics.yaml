@@ -1,0 +1,17 @@
+fact_tables:
+  - display_name: Events
+    table: a.b.c
+    timestamp_column: t
+    entities:
+      - entity: user
+        column: user_id
+    measures:
+      - display_name: value
+        column: v1
+      - display_name: value
+        column: v2
+    dimensions:
+      - name: platform
+        column: p1
+      - name: platform
+        column: p2

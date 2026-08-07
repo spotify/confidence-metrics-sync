@@ -1,0 +1,47 @@
+fact_tables:
+  - display_name: Events
+    table: a.b.c
+    timestamp_column: t
+    entities:
+      - entity: user
+        column: user_id
+    measures:
+      - display_name: clicks
+        column: c
+    dimensions:
+      - name: platform
+        column: p
+
+measurements:
+  - display_name: Ghost Table
+    fact_table: Nope
+    entity: user
+    measure: clicks
+    operation: sum
+  - display_name: Ghost Measure
+    fact_table: Events
+    entity: user
+    measure: views
+    operation: sum
+  - display_name: Ghost Entity
+    fact_table: Events
+    entity: session
+    measure: clicks
+    operation: sum
+  - display_name: Ghost Dimension
+    fact_table: Events
+    entity: user
+    measure: clicks
+    operation: sum
+    filters:
+      - dimension: country
+        operation: equals
+        values: [SE]
+
+metrics:
+  - display_name: Ghost Measurement Metric
+    entity: user
+    measurement: Nope
+  - display_name: Mismatched Entity Metric
+    entity: session
+    measurement: Ghost Measure

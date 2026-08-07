@@ -1,0 +1,2 @@
+testdata/invalid/unknown-field/metrics.yaml:5: error[unknown-field]: unknown field "prefered_direction"
+✗ 1 error(s), 0 warning(s) in 1 file(s)

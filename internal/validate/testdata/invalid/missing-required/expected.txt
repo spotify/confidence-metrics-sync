@@ -1,0 +1,2 @@
+testdata/invalid/missing-required/metrics.yaml:2:5: error[schema]: fact_tables[0]: missing property 'timestamp_column'
+✗ 1 error(s), 0 warning(s) in 1 file(s)

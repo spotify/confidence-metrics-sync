@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/spotify/confidence-metrics-sync/main/internal/schema/metric.schema.json
+# A named measure's display_name collides with an unnamed measure's column.
+
+fact_tables:
+  - display_name: Ambiguous FT
+    sql: SELECT user_id, ts, a, value FROM events
+    timestamp_column: ts
+    entities:
+      - entity: user
+        column: user_id
+    measures:
+      - display_name: value
+        column: a
+      - column: value

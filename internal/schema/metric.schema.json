@@ -1,0 +1,572 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://confidence.dev/schemas/metrics/v1",
+  "title": "Confidence Metrics Definition",
+  "description": "Schema for defining fact tables, measurements, and metrics for Confidence.",
+  "type": "object",
+  "properties": {
+    "fact_tables": {
+      "type": "array",
+      "description": "Array of fact table definitions.",
+      "items": { "$ref": "#/$defs/fact_table" }
+    },
+    "measurements": {
+      "type": "array",
+      "description": "Array of measurement definitions, with optional nested metrics.",
+      "items": { "$ref": "#/$defs/measurement" }
+    },
+    "metrics": {
+      "type": "array",
+      "description": "Array of metric definitions referencing measurements (flat style).",
+      "items": { "$ref": "#/$defs/flat_metric" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "fact_table": {
+      "type": "object",
+      "description": "A fact table defining a data source with entity mappings, measures, and optional dimensions.",
+      "properties": {
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the fact table."
+        },
+        "sql": {
+          "type": "string",
+          "minLength": 1,
+          "description": "SQL query defining the data source. Supports {START_TIME} and {END_TIME} placeholders."
+        },
+        "table": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Fully-qualified table/view name. The CLI generates a SELECT from the listed columns."
+        },
+        "timestamp_column": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Column representing when the event occurred."
+        },
+        "entities": {
+          "type": "array",
+          "description": "Entity-to-column mappings.",
+          "items": { "$ref": "#/$defs/entity_mapping" },
+          "minItems": 1
+        },
+        "measures": {
+          "type": "array",
+          "description": "Measure definitions (columns to aggregate).",
+          "items": { "$ref": "#/$defs/measure" },
+          "minItems": 1
+        },
+        "dimensions": {
+          "type": "array",
+          "description": "Dimension definitions (columns to filter/slice by).",
+          "items": { "$ref": "#/$defs/dimension" }
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Owner of the resource. Use a pinned identity (identities/...) or a friendly name (display name / email) — the CLI resolves friendly names and tells you the pinned value to use."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description."
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Custom key-value labels."
+        }
+      },
+      "required": ["display_name", "timestamp_column", "entities", "measures"],
+      "oneOf": [
+        { "required": ["sql"], "not": { "required": ["table"] } },
+        { "required": ["table"], "not": { "required": ["sql"] } }
+      ],
+      "additionalProperties": false
+    },
+
+    "entity_mapping": {
+      "type": "object",
+      "description": "Maps an entity to a column containing its identifier.",
+      "properties": {
+        "entity": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Entity name (e.g., 'user')."
+        },
+        "column": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Column containing the entity ID."
+        }
+      },
+      "required": ["entity", "column"],
+      "additionalProperties": false
+    },
+
+    "measure": {
+      "type": "object",
+      "description": "A measure definition — a column on a fact table that can be aggregated.",
+      "properties": {
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the measure."
+        },
+        "column": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Column name or expression (e.g., 'ms_played' or 'content_type = \\'podcast\\'')."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description."
+        },
+        "type": {
+          "type": "string",
+          "description": "Declared column type override (e.g. 'hll_sketch')."
+        },
+        "unit": {
+          "$ref": "#/$defs/measure_unit",
+          "description": "Physical unit of this measure."
+        }
+      },
+      "required": ["column"],
+      "additionalProperties": false
+    },
+
+    "measure_unit": {
+      "type": "object",
+      "description": "Physical unit of measurement.",
+      "properties": {
+        "base_unit": {
+          "type": "string",
+          "description": "Standard base unit.",
+          "enum": ["none", "percent", "second", "byte", "bit"]
+        },
+        "currency_code": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$",
+          "description": "ISO 4217 currency code."
+        },
+        "custom_unit": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Custom unit name."
+        },
+        "base_unit_multiplier": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Multiplier to convert to the base unit (e.g. 60 for minutes when base_unit is second)."
+        }
+      },
+      "oneOf": [
+        { "required": ["base_unit"] },
+        { "required": ["currency_code"] },
+        { "required": ["custom_unit"] }
+      ],
+      "additionalProperties": false
+    },
+
+    "dimension": {
+      "type": "object",
+      "description": "A dimension definition — a column used for filtering/slicing.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Name of the dimension."
+        },
+        "column": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Column name."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description."
+        }
+      },
+      "required": ["name", "column"],
+      "additionalProperties": false
+    },
+
+    "measurement": {
+      "type": "object",
+      "description": "An aggregation specification. Bundles a fact table, measure, operation, and null handling.",
+      "properties": {
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of this measurement."
+        },
+        "fact_table": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the fact table containing the measure."
+        },
+        "entity": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Entity this measurement is computed for."
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Owner of the resource. Use a pinned identity (identities/...) or a friendly name (display name / email) — the CLI resolves friendly names and tells you the pinned value to use."
+        },
+        "measure": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the measure to aggregate (for simple measurements). For an unnamed measure, use its column name. Optional for operation: count, which counts facts."
+        },
+        "operation": {
+          "type": "string",
+          "description": "Aggregation operation (for simple measurements).",
+          "enum": ["sum", "count", "count_distinct", "avg", "max", "min"]
+        },
+        "numerator": {
+          "$ref": "#/$defs/aggregation_spec",
+          "description": "Numerator aggregation (for ratio measurements)."
+        },
+        "denominator": {
+          "$ref": "#/$defs/aggregation_spec",
+          "description": "Denominator aggregation (for ratio measurements)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description."
+        },
+        "filters": {
+          "type": "array",
+          "description": "Dimension filters.",
+          "items": { "$ref": "#/$defs/filter" }
+        },
+        "aggregation_threshold": {
+          "$ref": "#/$defs/aggregation_threshold",
+          "description": "Threshold condition applied after aggregation."
+        },
+        "cap": {
+          "$ref": "#/$defs/value_cap",
+          "description": "Value cap applied to the aggregation."
+        },
+        "quantile_level": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1,
+          "description": "Quantile level (e.g. 0.5 for median). Turns this into a quantile measurement."
+        },
+        "null_handling": {
+          "$ref": "#/$defs/null_handling",
+          "description": "How to handle missing values."
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Custom key-value labels."
+        },
+        "metrics": {
+          "type": "array",
+          "description": "Metrics nested under this measurement (nested flavor).",
+          "items": { "$ref": "#/$defs/nested_metric" }
+        }
+      },
+      "required": ["display_name", "fact_table", "entity"],
+      "oneOf": [
+        {
+          "required": ["operation"],
+          "not": { "anyOf": [{ "required": ["numerator"] }, { "required": ["denominator"] }, { "required": ["quantile_level"] }] },
+          "anyOf": [
+            { "required": ["measure"] },
+            { "properties": { "operation": { "const": "count" } } }
+          ]
+        },
+        {
+          "required": ["numerator", "denominator"],
+          "not": { "anyOf": [{ "required": ["measure"] }, { "required": ["operation"] }] }
+        },
+        {
+          "required": ["operation", "quantile_level"],
+          "not": { "anyOf": [{ "required": ["numerator"] }, { "required": ["denominator"] }] },
+          "anyOf": [
+            { "required": ["measure"] },
+            { "properties": { "operation": { "const": "count" } } }
+          ]
+        }
+      ],
+      "additionalProperties": false
+    },
+
+    "aggregation_spec": {
+      "type": "object",
+      "description": "Aggregation specification for numerator or denominator of a ratio measurement.",
+      "properties": {
+        "measure": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the measure to aggregate. For an unnamed measure, use its column name."
+        },
+        "operation": {
+          "type": "string",
+          "description": "Aggregation operation.",
+          "enum": ["sum", "count", "count_distinct", "avg", "max", "min"]
+        },
+        "filters": {
+          "type": "array",
+          "description": "Dimension filters.",
+          "items": { "$ref": "#/$defs/filter" }
+        },
+        "cap": {
+          "$ref": "#/$defs/value_cap",
+          "description": "Value cap applied to the aggregation."
+        }
+      },
+      "required": ["measure", "operation"],
+      "additionalProperties": false
+    },
+
+    "flat_metric": {
+      "type": "object",
+      "description": "A metric defined in the top-level metrics list, referencing a measurement by display name.",
+      "properties": {
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the metric."
+        },
+        "entity": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Entity this metric is computed for."
+        },
+        "measurement": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the measurement this metric uses."
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Owner of the resource. Use a pinned identity (identities/...) or a friendly name (display name / email) — the CLI resolves friendly names and tells you the pinned value to use."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description."
+        },
+        "preferred_direction": {
+          "type": "string",
+          "description": "Direction considered favorable.",
+          "enum": ["increase", "decrease"]
+        },
+        "default_effect_size": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Default MDE (minimum detectable effect). Must be greater than zero."
+        },
+        "measurement_window": {
+          "$ref": "#/$defs/measurement_window",
+          "description": "Time window configuration for measurement collection."
+        },
+        "filters": {
+          "type": "array",
+          "description": "Dimension filters applied to the metric.",
+          "items": { "$ref": "#/$defs/filter" }
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Custom key-value labels."
+        },
+        "variance_reduction": {
+          "$ref": "#/$defs/variance_reduction",
+          "description": "Variance reduction configuration."
+        }
+      },
+      "required": ["display_name", "entity", "measurement"],
+      "additionalProperties": false
+    },
+
+    "nested_metric": {
+      "type": "object",
+      "description": "A metric nested under a measurement. The measurement and entity are inherited from the parent.",
+      "properties": {
+        "display_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name of the metric."
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Owner of the resource. Use a pinned identity (identities/...) or a friendly name (display name / email) — the CLI resolves friendly names and tells you the pinned value to use."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description."
+        },
+        "preferred_direction": {
+          "type": "string",
+          "description": "Direction considered favorable.",
+          "enum": ["increase", "decrease"]
+        },
+        "default_effect_size": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Default MDE (minimum detectable effect). Must be greater than zero."
+        },
+        "measurement_window": {
+          "$ref": "#/$defs/measurement_window",
+          "description": "Time window configuration for measurement collection."
+        },
+        "filters": {
+          "type": "array",
+          "description": "Dimension filters applied to the metric.",
+          "items": { "$ref": "#/$defs/filter" }
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Custom key-value labels."
+        },
+        "variance_reduction": {
+          "$ref": "#/$defs/variance_reduction",
+          "description": "Variance reduction configuration."
+        }
+      },
+      "required": ["display_name"],
+      "additionalProperties": false
+    },
+
+    "measurement_window": {
+      "type": "object",
+      "description": "Time window for measurement collection relative to exposure.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Window type: closed (default), semi_open, or open.",
+          "enum": ["closed", "semi_open", "open"]
+        },
+        "aggregation_window": {
+          "type": "string",
+          "pattern": "^\\d+s$",
+          "description": "Duration in seconds (e.g., '86400s' for 1 day)."
+        },
+        "exposure_offset": {
+          "type": "string",
+          "pattern": "^\\d+s$",
+          "description": "Offset from exposure in seconds (default: '0s')."
+        }
+      },
+      "oneOf": [
+        {
+          "description": "Open window (cumulative, no duration)",
+          "properties": { "type": { "const": "open" } },
+          "required": ["type"]
+        },
+        {
+          "description": "Closed or semi-open window (duration required)",
+          "required": ["aggregation_window"]
+        }
+      ],
+      "additionalProperties": false
+    },
+
+    "variance_reduction": {
+      "type": "object",
+      "description": "Variance reduction configuration. Absent = enabled with default window.",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether variance reduction is enabled. Default: true."
+        },
+        "pre_exposure_window": {
+          "type": "string",
+          "pattern": "^\\d+s$",
+          "description": "Custom pre-exposure aggregation window (e.g. '604800s' for 7 days)."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "null_handling": {
+      "type": "object",
+      "description": "Controls how NULLs are treated in metric computation.",
+      "properties": {
+        "replace_entity_null_with_zero": {
+          "type": "boolean",
+          "description": "If true, entities with no matching rows get a zero instead of being excluded."
+        },
+        "replace_measure_null_with_zero": {
+          "type": "boolean",
+          "description": "If true, NULL measure values are treated as zero."
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "aggregation_threshold": {
+      "type": "object",
+      "description": "Threshold condition applied after aggregation to produce a boolean result.",
+      "properties": {
+        "direction": {
+          "type": "string",
+          "description": "Comparison direction.",
+          "enum": ["gt", "lt", "gte", "lte", "eq"]
+        },
+        "value": {
+          "type": "number",
+          "description": "Threshold value to compare against."
+        }
+      },
+      "required": ["direction", "value"],
+      "additionalProperties": false
+    },
+
+    "value_cap": {
+      "type": "object",
+      "description": "Constrains aggregated values to a min/max range.",
+      "properties": {
+        "min": {
+          "type": "number",
+          "description": "Minimum cap value."
+        },
+        "max": {
+          "type": "number",
+          "description": "Maximum cap value."
+        }
+      },
+      "anyOf": [
+        { "required": ["min"] },
+        { "required": ["max"] }
+      ],
+      "additionalProperties": false
+    },
+
+    "filter": {
+      "type": "object",
+      "description": "A dimension filter to restrict which rows are included.",
+      "properties": {
+        "dimension": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Dimension name from the fact table."
+        },
+        "operation": {
+          "type": "string",
+          "description": "Filter operation.",
+          "enum": ["equals", "not_equals", "gt", "gte", "lt", "lte", "between", "like"]
+        },
+        "values": {
+          "type": "array",
+          "description": "Values to match.",
+          "items": { "type": "string" },
+          "minItems": 1
+        }
+      },
+      "required": ["dimension", "operation", "values"],
+      "additionalProperties": false
+    }
+  }
+}

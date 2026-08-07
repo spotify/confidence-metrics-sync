@@ -1,0 +1,38 @@
+version: 2
+
+project_name: confidence-metrics-sync
+
+builds:
+  - id: confidence-metrics
+    binary: confidence-metrics
+    main: .
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/spotify/confidence-metrics-sync/cmd.version={{.Version}}
+
+archives:
+  - ids:
+      - confidence-metrics
+    name_template: "confidence-metrics_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - NOTICE
+      - README.md
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: SHA256SUMS
+
+changelog:
+  use: git

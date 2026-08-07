@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/spotify/confidence-metrics-sync/main/internal/schema/metric.schema.json
+
+fact_tables:
+  - display_name: Checkout Events
+    sql: |
+      SELECT user_id, event_time, started, completed, platform
+      FROM analytics.prod.checkout_events
+      WHERE event_time BETWEEN {START_TIME} AND {END_TIME}
+    timestamp_column: event_time
+    entities:
+      - entity: user
+        column: user_id
+    measures:
+      - display_name: checkouts_started
+        column: started
+      - display_name: checkouts_completed
+        column: completed
+    dimensions:
+      - name: platform
+        column: platform
+
+measurements:
+  - display_name: Checkout Conversion
+    fact_table: Checkout Events
+    entity: user
+    numerator:
+      measure: checkouts_completed
+      operation: sum
+    denominator:
+      measure: checkouts_started
+      operation: sum
+      filters:
+        - dimension: platform
+          operation: not_equals
+          values: [unknown]
+    aggregation_threshold:
+      direction: gt
+      value: 0
+
+metrics:
+  - display_name: Checkout Conversion - Day 7
+    entity: user
+    measurement: Checkout Conversion
+    description: Share of started checkouts completed within 7 days.
+    preferred_direction: increase
+    measurement_window:
+      aggregation_window: 604800s

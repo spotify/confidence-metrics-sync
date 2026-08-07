@@ -1,0 +1,715 @@
+{
+  "reference": "golden-contract-test",
+  "resources": [
+    {
+      "factTable": {
+        "sql": "SELECT user_id, event_time, amount FROM warehouse.events",
+        "displayName": "Warehouse Events",
+        "timestampColumn": {
+          "name": "event_time"
+        },
+        "entities": [
+          {
+            "column": {
+              "name": "user_id"
+            },
+            "entity": "entities/user1"
+          }
+        ],
+        "measures": [
+          {
+            "column": {
+              "name": "amount"
+            },
+            "displayName": "amount"
+          }
+        ],
+        "dimensions": [
+          {
+            "name": "region"
+          }
+        ]
+      }
+    },
+    {
+      "factTable": {
+        "sql": "SELECT user_id, event_time, revenue_usd, page_views\nFROM analytics.prod.revenue\nWHERE event_time BETWEEN TIMESTAMP({START_TIME}) AND TIMESTAMP({END_TIME})",
+        "displayName": "Revenue Events",
+        "timestampColumn": {
+          "name": "event_time"
+        },
+        "entities": [
+          {
+            "column": {
+              "name": "user_id"
+            },
+            "entity": "entities/user1"
+          }
+        ],
+        "measures": [
+          {
+            "column": {
+              "name": "revenue_usd"
+            },
+            "displayName": "revenue",
+            "unit": {
+              "currencyCode": "USD"
+            }
+          },
+          {
+            "column": {
+              "name": "page_views"
+            },
+            "displayName": "page_views",
+            "unit": {
+              "customUnit": "view"
+            }
+          }
+        ],
+        "owner": "identities/revenue-team",
+        "labels": {
+          "domain": "monetization",
+          "team": "growth"
+        }
+      }
+    },
+    {
+      "factTable": {
+        "sql": "  SELECT user_id, ts, value\n  FROM events\n  WHERE ts BETWEEN {START_TIME} AND {END_TIME}",
+        "displayName": "Indented SQL Events",
+        "timestampColumn": {
+          "name": "ts"
+        },
+        "entities": [
+          {
+            "column": {
+              "name": "user_id"
+            },
+            "entity": "entities/user1"
+          }
+        ],
+        "measures": [
+          {
+            "column": {
+              "name": "value"
+            },
+            "displayName": "value"
+          }
+        ]
+      }
+    },
+    {
+      "factTable": {
+        "sql": "SELECT user_id, event_time, started, completed, platform\nFROM analytics.prod.checkout_events\nWHERE event_time BETWEEN {START_TIME} AND {END_TIME}\n",
+        "displayName": "Checkout Events",
+        "timestampColumn": {
+          "name": "event_time"
+        },
+        "entities": [
+          {
+            "column": {
+              "name": "user_id"
+            },
+            "entity": "entities/user1"
+          }
+        ],
+        "measures": [
+          {
+            "column": {
+              "name": "started"
+            },
+            "displayName": "checkouts_started"
+          },
+          {
+            "column": {
+              "name": "completed"
+            },
+            "displayName": "checkouts_completed"
+          }
+        ],
+        "dimensions": [
+          {
+            "name": "platform"
+          }
+        ]
+      }
+    },
+    {
+      "factTable": {
+        "sql": "SELECT user_id, event_time, (ms_played / 60000) AS minutes_played, (stream_count \u003e 0) AS had_stream, platform, content_type FROM analytics.prod.hourly_stream",
+        "displayName": "Hourly Stream",
+        "description": "Hourly streaming aggregates per user.",
+        "timestampColumn": {
+          "name": "event_time"
+        },
+        "entities": [
+          {
+            "column": {
+              "name": "user_id"
+            },
+            "entity": "entities/user1"
+          }
+        ],
+        "measures": [
+          {
+            "column": {
+              "name": "minutes_played"
+            },
+            "displayName": "minutes_played"
+          },
+          {
+            "column": {
+              "name": "had_stream"
+            },
+            "displayName": "had_stream"
+          }
+        ],
+        "dimensions": [
+          {
+            "name": "platform"
+          },
+          {
+            "name": "content_type"
+          }
+        ]
+      }
+    },
+    {
+      "factTable": {
+        "sql": "SELECT user_id, ts, value FROM events",
+        "displayName": "Simple Events",
+        "timestampColumn": {
+          "name": "ts"
+        },
+        "entities": [
+          {
+            "column": {
+              "name": "user_id"
+            },
+            "entity": "entities/user1"
+          }
+        ],
+        "measures": [
+          {
+            "column": {
+              "name": "value"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "measurement": {
+        "displayName": "Capped Revenue",
+        "entity": "entities/user1",
+        "factTable": "Revenue Events",
+        "typeSpec": {
+          "averageMetricSpec": {
+            "measurement": {
+              "name": "revenue_usd"
+            },
+            "aggregation": {
+              "type": "AGGREGATION_TYPE_SUM",
+              "cap": {
+                "max": {
+                  "value": "1000"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "measurement": {
+        "displayName": "Capped Conversion",
+        "entity": "entities/user1",
+        "factTable": "Checkout Events",
+        "typeSpec": {
+          "ratioMetricSpec": {
+            "numerator": {
+              "name": "completed"
+            },
+            "numeratorAggregation": {
+              "type": "AGGREGATION_TYPE_SUM",
+              "cap": {
+                "min": {
+                  "value": "0"
+                }
+              }
+            },
+            "denominator": {
+              "name": "started"
+            },
+            "denominatorAggregation": {
+              "type": "AGGREGATION_TYPE_SUM",
+              "cap": {
+                "max": {
+                  "value": "100"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "measurement": {
+        "displayName": "High Value Streams",
+        "entity": "entities/user1",
+        "factTable": "Hourly Stream",
+        "typeSpec": {
+          "averageMetricSpec": {
+            "measurement": {
+              "name": "minutes_played"
+            },
+            "aggregation": {
+              "type": "AGGREGATION_TYPE_SUM"
+            }
+          }
+        },
+        "filter": {
+          "criteria": {
+            "c0": {
+              "attribute": {
+                "attribute": "content_type",
+                "eqRule": {
+                  "value": {
+                    "stringValue": "music"
+                  }
+                }
+              }
+            },
+            "c1": {
+              "attribute": {
+                "attribute": "platform",
+                "likeRule": {
+                  "pattern": "ios%"
+                }
+              }
+            }
+          },
+          "expression": {
+            "and": {
+              "operands": [
+                {
+                  "ref": "c0"
+                },
+                {
+                  "ref": "c1"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "measurement": {
+        "displayName": "Median Minutes Played",
+        "entity": "entities/user1",
+        "factTable": "Hourly Stream",
+        "typeSpec": {
+          "quantileMetricSpec": {
+            "measurement": {
+              "name": "minutes_played"
+            },
+            "aggregation": {
+              "type": "AGGREGATION_TYPE_SUM"
+            },
+            "quantileLevel": 0.5
+          }
+        }
+      }
+    },
+    {
+      "measurement": {
+        "displayName": "Warehouse Amount",
+        "entity": "entities/user1",
+        "factTable": "Warehouse Events",
+        "typeSpec": {
+          "averageMetricSpec": {
+            "measurement": {
+              "name": "amount"
+            },
+            "aggregation": {
+              "type": "AGGREGATION_TYPE_SUM"
+            }
+          }
+        },
+        "filter": {
+          "criteria": {
+            "c0": {
+              "attribute": {
+                "attribute": "region",
+                "rangeRule": {
+                  "startInclusive": {
+                    "stringValue": "A"
+                  }
+                }
+              }
+            }
+          },
+          "expression": {
+            "ref": "c0"
+          }
+        }
+      }
+    },
+    {
+      "measurement": {
+        "displayName": "Total Revenue",
+        "entity": "entities/user1",
+        "factTable": "Revenue Events",
+        "typeSpec": {
+          "averageMetricSpec": {
+            "measurement": {
+              "name": "revenue_usd"
+            },
+            "aggregation": {
+              "type": "AGGREGATION_TYPE_SUM"
+            }
+          }
+        },
+        "owner": "identities/revenue-team",
+        "labels": {
+          "guardrail": "true"
+        }
+      }
+    },
+    {
+      "measurement": {
+        "displayName": "Checkout Conversion",
+        "entity": "entities/user1",
+        "factTable": "Checkout Events",
+        "typeSpec": {
+          "ratioMetricSpec": {
+            "numerator": {
+              "name": "completed"
+            },
+            "numeratorAggregation": {
+              "type": "AGGREGATION_TYPE_SUM",
+              "threshold": {
+                "threshold": {
+                  "value": "0"
+                },
+                "direction": "AGGREGATION_THRESHOLD_DIRECTION_GT"
+              }
+            },
+            "denominator": {
+              "name": "started"
+            },
+            "denominatorAggregation": {
+              "type": "AGGREGATION_TYPE_SUM"
+            },
+            "denominatorFilter": {
+              "criteria": {
+                "c0": {
+                  "attribute": {
+                    "attribute": "platform",
+                    "eqRule": {
+                      "value": {
+                        "stringValue": "unknown"
+                      }
+                    }
+                  }
+                }
+              },
+              "expression": {
+                "not": {
+                  "ref": "c0"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "measurement": {
+        "displayName": "Hourly Minutes Played",
+        "entity": "entities/user1",
+        "factTable": "Hourly Stream",
+        "typeSpec": {
+          "averageMetricSpec": {
+            "measurement": {
+              "name": "minutes_played"
+            },
+            "aggregation": {
+              "type": "AGGREGATION_TYPE_SUM"
+            }
+          }
+        },
+        "nullHandling": {
+          "replaceEntityNullWithZero": true
+        },
+        "owner": "identities/abc123"
+      }
+    },
+    {
+      "measurement": {
+        "displayName": "Podcast Minutes Played",
+        "entity": "entities/user1",
+        "factTable": "Hourly Stream",
+        "typeSpec": {
+          "averageMetricSpec": {
+            "measurement": {
+              "name": "minutes_played"
+            },
+            "aggregation": {
+              "type": "AGGREGATION_TYPE_SUM"
+            }
+          }
+        },
+        "filter": {
+          "criteria": {
+            "c0": {
+              "attribute": {
+                "attribute": "content_type",
+                "eqRule": {
+                  "value": {
+                    "stringValue": "podcast"
+                  }
+                }
+              }
+            }
+          },
+          "expression": {
+            "ref": "c0"
+          }
+        }
+      }
+    },
+    {
+      "measurement": {
+        "displayName": "Stream Count",
+        "description": "Number of stream facts per user; count needs no measure.",
+        "entity": "entities/user1",
+        "factTable": "Hourly Stream",
+        "typeSpec": {
+          "averageMetricSpec": {
+            "aggregation": {
+              "type": "AGGREGATION_TYPE_COUNT"
+            }
+          }
+        }
+      }
+    },
+    {
+      "measurement": {
+        "displayName": "Simple Sum",
+        "entity": "entities/user1",
+        "factTable": "Simple Events",
+        "typeSpec": {
+          "averageMetricSpec": {
+            "measurement": {
+              "name": "value"
+            },
+            "aggregation": {
+              "type": "AGGREGATION_TYPE_SUM"
+            }
+          }
+        }
+      }
+    },
+    {
+      "metric": {
+        "displayName": "High Value Streams - Day 1",
+        "entity": "entities/user1",
+        "measurement": "High Value Streams",
+        "measurementConfig": {
+          "closedWindow": {
+            "aggregationWindow": "86400s",
+            "exposureOffset": "0s"
+          }
+        },
+        "filter": {
+          "criteria": {
+            "c0": {
+              "attribute": {
+                "attribute": "platform",
+                "eqRule": {
+                  "value": {
+                    "stringValue": "ios"
+                  }
+                }
+              }
+            }
+          },
+          "expression": {
+            "ref": "c0"
+          }
+        }
+      }
+    },
+    {
+      "metric": {
+        "displayName": "Median Minutes - Day 1",
+        "entity": "entities/user1",
+        "measurement": "Median Minutes Played",
+        "measurementConfig": {
+          "closedWindow": {
+            "aggregationWindow": "86400s",
+            "exposureOffset": "0s"
+          }
+        }
+      }
+    },
+    {
+      "metric": {
+        "displayName": "Revenue - Filtered",
+        "entity": "entities/user1",
+        "measurement": "Capped Revenue",
+        "measurementConfig": {
+          "closedWindow": {
+            "aggregationWindow": "86400s",
+            "exposureOffset": "0s"
+          }
+        },
+        "filter": {
+          "criteria": {
+            "c0": {
+              "attribute": {
+                "attribute": "platform",
+                "eqRule": {
+                  "value": {
+                    "stringValue": "web"
+                  }
+                }
+              }
+            }
+          },
+          "expression": {
+            "not": {
+              "ref": "c0"
+            }
+          }
+        }
+      }
+    },
+    {
+      "metric": {
+        "displayName": "Revenue - Between",
+        "entity": "entities/user1",
+        "measurement": "Capped Revenue",
+        "measurementConfig": {
+          "closedWindow": {
+            "aggregationWindow": "86400s",
+            "exposureOffset": "0s"
+          }
+        },
+        "filter": {
+          "criteria": {
+            "c0": {
+              "attribute": {
+                "attribute": "platform",
+                "rangeRule": {
+                  "startInclusive": {
+                    "stringValue": "a"
+                  },
+                  "endInclusive": {
+                    "stringValue": "m"
+                  }
+                }
+              }
+            }
+          },
+          "expression": {
+            "ref": "c0"
+          }
+        }
+      }
+    },
+    {
+      "metric": {
+        "displayName": "Revenue - Day 1",
+        "entity": "entities/user1",
+        "measurement": "Total Revenue",
+        "measurementConfig": {
+          "closedWindow": {
+            "aggregationWindow": "86400s",
+            "exposureOffset": "0s"
+          }
+        },
+        "labels": {
+          "tier": "primary"
+        },
+        "varianceReductionConfig": {
+          "aggregationWindowOverride": "604800s"
+        }
+      }
+    },
+    {
+      "metric": {
+        "displayName": "Revenue - Cumulative",
+        "entity": "entities/user1",
+        "measurement": "Total Revenue",
+        "measurementConfig": {
+          "openWindow": {}
+        },
+        "varianceReductionConfig": {
+          "disabled": true
+        }
+      }
+    },
+    {
+      "metric": {
+        "displayName": "Revenue - Semi Open Week",
+        "entity": "entities/user1",
+        "measurement": "Total Revenue",
+        "measurementConfig": {
+          "semiOpenWindow": {
+            "aggregationWindow": "604800s"
+          }
+        }
+      }
+    },
+    {
+      "metric": {
+        "displayName": "Checkout Conversion - Day 7",
+        "description": "Share of started checkouts completed within 7 days.",
+        "entity": "entities/user1",
+        "measurement": "Checkout Conversion",
+        "measurementConfig": {
+          "closedWindow": {
+            "aggregationWindow": "604800s",
+            "exposureOffset": "0s"
+          }
+        },
+        "preferredDirection": "INCREASE"
+      }
+    },
+    {
+      "metric": {
+        "displayName": "Minutes Played - Day 1",
+        "entity": "entities/user1",
+        "measurement": "Hourly Minutes Played",
+        "measurementConfig": {
+          "closedWindow": {
+            "aggregationWindow": "86400s",
+            "exposureOffset": "0s"
+          }
+        },
+        "preferredDirection": "INCREASE",
+        "defaultEffectSize": {
+          "value": "0.01"
+        }
+      }
+    },
+    {
+      "metric": {
+        "displayName": "Minutes Played - Day 7",
+        "entity": "entities/user1",
+        "measurement": "Hourly Minutes Played",
+        "measurementConfig": {
+          "closedWindow": {
+            "aggregationWindow": "604800s",
+            "exposureOffset": "0s"
+          }
+        },
+        "preferredDirection": "INCREASE"
+      }
+    }
+  ],
+  "dryRun": true
+}

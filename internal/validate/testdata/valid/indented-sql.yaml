@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/spotify/confidence-metrics-sync/main/internal/schema/metric.schema.json
+# SQL whose lines all start with whitespace must round-trip exactly:
+# yaml.v3 mis-emits nested block scalars with an indentation indicator
+# and the leading whitespace is lost on re-parse, so export quotes such
+# strings instead.
+
+fact_tables:
+  - display_name: Indented SQL Events
+    sql: "  SELECT user_id, ts, value\n  FROM events\n  WHERE ts BETWEEN {START_TIME} AND {END_TIME}"
+    timestamp_column: ts
+    entities:
+      - entity: user
+        column: user_id
+    measures:
+      - display_name: value
+        column: value

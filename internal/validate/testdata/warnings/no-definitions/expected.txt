@@ -1,0 +1,3 @@
+testdata/warnings/no-definitions/comments-only.yaml: warning[no-definitions]: file contains no YAML document
+testdata/warnings/no-definitions/empty-object.yaml:1:1: warning[no-definitions]: file defines no fact tables, measurements, or metrics
+✓ 2 file(s) valid, 2 warning(s)
