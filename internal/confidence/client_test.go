@@ -92,6 +92,27 @@ func TestListMetricsPaginatesAndFilters(t *testing.T) {
 	}
 }
 
+func TestBatchGetFactTablesUsesExactNames(t *testing.T) {
+	c, _ := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet || r.URL.Path != "/v1/factTables:batchGet" {
+			t.Errorf("unexpected %s %s", r.Method, r.URL.Path)
+		}
+		got := r.URL.Query()["names"]
+		if len(got) != 2 || got[0] != "factTables/a" || got[1] != "factTables/b" {
+			t.Errorf("unexpected names query: %v", got)
+		}
+		fmt.Fprint(w, `{"factTables":[{"name":"factTables/a"},{"name":"factTables/b"}]}`)
+	})
+
+	factTables, err := c.BatchGetFactTables(context.Background(), []string{"factTables/a", "factTables/b"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(factTables) != 2 || factTables[0].Name != "factTables/a" || factTables[1].Name != "factTables/b" {
+		t.Fatalf("unexpected fact tables: %+v", factTables)
+	}
+}
+
 func TestUpdateMetricSendsMaskAndAllowMissing(t *testing.T) {
 	c, _ := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPatch || r.URL.Path != "/v1/metrics/xyz" {

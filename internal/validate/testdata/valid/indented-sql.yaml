@@ -5,7 +5,8 @@
 # strings instead.
 
 fact_tables:
-  - display_name: Indented SQL Events
+  - name: factTables/indented-sql-events
+    display_name: Indented SQL Events
     sql: "  SELECT user_id, ts, value\n  FROM events\n  WHERE ts BETWEEN {START_TIME} AND {END_TIME}"
     timestamp_column: ts
     entities:

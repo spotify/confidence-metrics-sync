@@ -1,5 +1,6 @@
 fact_tables:
-  - display_name: No Timestamp
+  - name: factTables/no-timestamp
+    display_name: No Timestamp
     table: a.b.c
     entities:
       - entity: user

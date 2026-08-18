@@ -57,8 +57,8 @@ func TestExportDefaultIsAllMetrics(t *testing.T) {
 	}
 	if !strings.Contains(out, "Minutes Played - Day 1") ||
 		!strings.Contains(out, "Checkout Conversion - Day 7") ||
-		!strings.Contains(out, "measurement: Hourly Minutes Played") {
-		t.Errorf("all live metrics should export with display-name references:\n%s", out)
+		!strings.Contains(out, "measurement: measurements/ms1") {
+		t.Errorf("all live metrics should export with resource-name references:\n%s", out)
 	}
 	if strings.Contains(out, "fact_tables:") || strings.Contains(out, "measurements:\n") {
 		t.Errorf("without --with-dependencies only metrics are exported:\n%s", out)

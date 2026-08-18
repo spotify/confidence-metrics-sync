@@ -187,7 +187,7 @@ func yamlMsgDiagnostic(path, msg string) report.Diagnostic {
 		d.Rule = "unknown-field"
 		d.Message = fmt.Sprintf("unknown field %q", m[1])
 		if inlineAggregationFields[m[1]] {
-			d.Message += " — metrics do not define aggregation inline; define it on a measurement and reference the measurement by display name"
+			d.Message += " — metrics do not define aggregation inline; define it on a measurement and reference the measurement by resource name"
 		}
 	} else if strings.Contains(d.Message, "already defined at line") {
 		d.Rule = "duplicate-key"

@@ -1,5 +1,5 @@
-testdata/invalid/bad-values/metrics.yaml:17:5: error[schema]: measurements[0].operation: value must be one of 'sum', 'count', 'count_distinct', 'avg', 'max', 'min'
-testdata/invalid/bad-values/metrics.yaml:23:5: error[schema]: metrics[0].default_effect_size: exclusiveMinimum: got -0.5, want 0
-testdata/invalid/bad-values/metrics.yaml:25:7: error[schema]: metrics[0].measurement_window.aggregation_window: '1 day' does not match pattern '^\\d+s$'
-testdata/invalid/bad-values/metrics.yaml:29:5: error[schema]: metrics[1].default_effect_size: exclusiveMinimum: got 0, want 0
+testdata/invalid/bad-values/metrics.yaml:19:5: error[schema]: measurements[0].operation: value must be one of 'sum', 'count', 'count_distinct', 'avg', 'max', 'min'
+testdata/invalid/bad-values/metrics.yaml:26:5: error[schema]: metrics[0].default_effect_size: exclusiveMinimum: got -0.5, want 0
+testdata/invalid/bad-values/metrics.yaml:28:7: error[schema]: metrics[0].measurement_window.aggregation_window: '1 day' does not match pattern '^\\d+s$'
+testdata/invalid/bad-values/metrics.yaml:33:5: error[schema]: metrics[1].default_effect_size: exclusiveMinimum: got 0, want 0
 ✗ 4 error(s), 0 warning(s) in 1 file(s)

@@ -1,5 +1,6 @@
 fact_tables:
-  - display_name: Events
+  - name: factTables/events
+    display_name: Events
     table: a.b.c
     timestamp_column: t
     entities:
@@ -13,23 +14,27 @@ fact_tables:
         column: p
 
 measurements:
-  - display_name: Ghost Table
-    fact_table: Nope
+  - name: measurements/ghost-table
+    display_name: Ghost Table
+    fact_table: factTables/external
     entity: user
     measure: clicks
     operation: sum
-  - display_name: Ghost Measure
-    fact_table: Events
+  - name: measurements/ghost-measure
+    display_name: Ghost Measure
+    fact_table: factTables/events
     entity: user
     measure: views
     operation: sum
-  - display_name: Ghost Entity
-    fact_table: Events
+  - name: measurements/ghost-entity
+    display_name: Ghost Entity
+    fact_table: factTables/events
     entity: session
     measure: clicks
     operation: sum
-  - display_name: Ghost Dimension
-    fact_table: Events
+  - name: measurements/ghost-dimension
+    display_name: Ghost Dimension
+    fact_table: factTables/events
     entity: user
     measure: clicks
     operation: sum
@@ -39,9 +44,11 @@ measurements:
         values: [SE]
 
 metrics:
-  - display_name: Ghost Measurement Metric
+  - name: metrics/ghost-measurement
+    display_name: Ghost Measurement Metric
     entity: user
-    measurement: Nope
-  - display_name: Mismatched Entity Metric
+    measurement: measurements/external
+  - name: metrics/mismatched-entity
+    display_name: Mismatched Entity Metric
     entity: session
-    measurement: Ghost Measure
+    measurement: measurements/ghost-measure

@@ -264,6 +264,27 @@ func (c *Client) GetFactTable(ctx context.Context, name string) (*FactTable, err
 	return &out, nil
 }
 
+// BatchGetFactTables fetches fact tables by resource name. The API accepts at
+// most 100 names per request, so larger inputs are split transparently.
+func (c *Client) BatchGetFactTables(ctx context.Context, names []string) ([]FactTable, error) {
+	var factTables []FactTable
+	for start := 0; start < len(names); start += 100 {
+		end := min(start+100, len(names))
+		q := url.Values{}
+		for _, name := range names[start:end] {
+			q.Add("names", name)
+		}
+		var page struct {
+			FactTables []FactTable `json:"factTables"`
+		}
+		if err := c.doRetry(ctx, http.MethodGet, "/v1/factTables:batchGet", q, nil, &page); err != nil {
+			return nil, err
+		}
+		factTables = append(factTables, page.FactTables...)
+	}
+	return factTables, nil
+}
+
 // ListFactTables returns all fact tables matching the filter ("" = all).
 func (c *Client) ListFactTables(ctx context.Context, filter string) ([]FactTable, error) {
 	return listPages(ctx, c, "/v1/factTables", filter, func(body []byte) ([]FactTable, string, error) {

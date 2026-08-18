@@ -244,6 +244,7 @@ func flatten(s string) string {
 
 func exportFactTable(ft confidence.FactTable, entityDisplay map[string]string) (*schema.FactTable, error) {
 	out := &schema.FactTable{
+		Name:        ft.Name,
 		DisplayName: ft.DisplayName,
 		SQL:         schema.ExactText(ft.SQL),
 		Owner:       ft.Owner,
@@ -304,8 +305,9 @@ func exportMeasurement(m confidence.Measurement, entityDisplay map[string]string
 	measureName := measureNameIndex(ft)
 
 	out := &schema.Measurement{
+		Name:        m.Name,
 		DisplayName: m.DisplayName,
-		FactTable:   ft.DisplayName,
+		FactTable:   m.FactTable,
 		Entity:      entity,
 		Owner:       m.Owner,
 		Description: schema.ExactText(m.Description),
@@ -404,9 +406,10 @@ func exportMetric(m confidence.Metric, entityDisplay map[string]string, measurem
 	}
 
 	out := &schema.Metric{
+		Name:        m.Name,
 		DisplayName: m.DisplayName,
 		Entity:      entity,
-		Measurement: meas.DisplayName,
+		Measurement: m.Measurement,
 		Description: schema.ExactText(m.Description),
 		Owner:       m.Owner,
 		Labels:      m.Labels,

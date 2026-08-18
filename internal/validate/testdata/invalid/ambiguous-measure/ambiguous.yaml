@@ -2,7 +2,8 @@
 # A named measure's display_name collides with an unnamed measure's column.
 
 fact_tables:
-  - display_name: Ambiguous FT
+  - name: factTables/ambiguous
+    display_name: Ambiguous FT
     sql: SELECT user_id, ts, a, value FROM events
     timestamp_column: ts
     entities:

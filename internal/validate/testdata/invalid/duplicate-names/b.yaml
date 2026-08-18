@@ -1,5 +1,6 @@
 fact_tables:
-  - display_name: Events
+  - name: factTables/events
+    display_name: Events
     table: a.b.c
     timestamp_column: t
     entities:
@@ -10,13 +11,15 @@ fact_tables:
         column: c
 
 metrics:
-  - display_name: Conversion
+  - name: metrics/conversion
+    display_name: Conversion
     entity: user
-    measurement: Shared Measurement
+    measurement: measurements/shared
 
 measurements:
-  - display_name: Shared Measurement
-    fact_table: Events
+  - name: measurements/shared
+    display_name: Shared Measurement
+    fact_table: factTables/events
     entity: user
     measure: m
     operation: sum

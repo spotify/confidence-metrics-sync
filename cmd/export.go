@@ -29,12 +29,11 @@ pattern: plain text must match the full name — quote names with spaces
 glob matching ('*conversion*'). Multiple patterns select the union; no
 patterns exports every metric.
 
-References (a metric's measurement) are written by display name. validate
-requires referenced measurements to be defined in the repository, so when
-bootstrapping a new repo export with --with-dependencies — it pulls each
-metric's measurement and that measurement's fact table, making the file
-self-contained. Without it the file only validates in a repo that already
-defines the measurements.
+Resource names are preserved and references use exact resource names. A
+reference may point to a resource managed through the API or another
+repository. Use --with-dependencies when bootstrapping a self-contained repo:
+it also exports each selected metric's measurement and that measurement's
+fact table.
 
 NOTE: sync treats the repository as the full statement of what its
 reference owns — resources absent from the files are ARCHIVED. Do not
@@ -62,8 +61,8 @@ exporting your own repo-managed resources round-trips as a no-op.`,
 			opts.Patterns = args
 
 			ctx := cmd.Context()
-			// Full listings regardless of selection — reference resolution
-			// (entity/measurement/fact table display names) needs them.
+			// Full listings regardless of selection — entity display-name
+			// resolution and dependency export need them.
 			entities, err := client.ListEntities(ctx)
 			if err != nil {
 				return fmt.Errorf("listing entities: %w", err)
@@ -107,7 +106,7 @@ exporting your own repo-managed resources round-trips as a no-op.`,
 			if err != nil {
 				return err
 			}
-			header := []byte("# yaml-language-server: $schema=https://raw.githubusercontent.com/spotify/confidence-metrics-sync/main/internal/schema/metric.schema.json\n# Exported by confidence-metrics; references are display names.\n\n")
+			header := []byte("# yaml-language-server: $schema=https://raw.githubusercontent.com/spotify/confidence-metrics-sync/main/internal/schema/metric.schema.json\n# Exported by confidence-metrics; resource names are stable identifiers.\n\n")
 			data = append(header, data...)
 
 			if outFile == "" {

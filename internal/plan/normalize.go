@@ -42,9 +42,10 @@ type DesiredMeasurement struct {
 // DesiredMetric is a metric with measurement/entity resolved regardless of
 // authoring flavor.
 type DesiredMetric struct {
+	Name               string
 	DisplayName        string
 	Entity             string
-	Measurement        string // measurement display name
+	Measurement        string // measurement resource name
 	Description        string
 	Owner              string
 	PreferredDirection string
@@ -75,9 +76,10 @@ func Normalize(files []*parser.File) Desired {
 			})
 			for j, mt := range m.Metrics {
 				d.Metrics = append(d.Metrics, DesiredMetric{
+					Name:               mt.Name,
 					DisplayName:        mt.DisplayName,
-					Entity:             m.Entity,      // inherited
-					Measurement:        m.DisplayName, // inherited
+					Entity:             m.Entity, // inherited
+					Measurement:        m.Name,   // inherited
 					Description:        string(mt.Description),
 					Owner:              mt.Owner,
 					PreferredDirection: mt.PreferredDirection,
@@ -92,6 +94,7 @@ func Normalize(files []*parser.File) Desired {
 		}
 		for i, mt := range f.Def.Metrics {
 			d.Metrics = append(d.Metrics, DesiredMetric{
+				Name:               mt.Name,
 				DisplayName:        mt.DisplayName,
 				Entity:             mt.Entity,
 				Measurement:        mt.Measurement,

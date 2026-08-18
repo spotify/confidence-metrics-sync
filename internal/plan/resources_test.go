@@ -1,11 +1,13 @@
 package plan
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/spotify/confidence-metrics-sync/internal/confidence"
 	"github.com/spotify/confidence-metrics-sync/internal/parser"
 	"github.com/spotify/confidence-metrics-sync/internal/report"
+	"github.com/spotify/confidence-metrics-sync/internal/schema"
 )
 
 func desiredFixture(t *testing.T) Desired {
@@ -65,6 +67,9 @@ func TestBuildSyncResources(t *testing.T) {
 	for _, r := range resources {
 		switch {
 		case r.FactTable != nil:
+			if !strings.HasPrefix(r.FactTable.Name, "factTables/") {
+				t.Errorf("fact table name not propagated: %q", r.FactTable.Name)
+			}
 			kinds += "F"
 		case r.Measurement != nil:
 			kinds += "S"
@@ -89,9 +94,11 @@ func TestBuildSyncResources(t *testing.T) {
 				t.Errorf("fact table %q lost its owner: %q", r.FactTable.DisplayName, r.FactTable.Owner)
 			}
 		case r.Measurement != nil:
-			// Fact table references travel as display names.
-			if r.Measurement.FactTable != "Hourly Stream" && r.Measurement.FactTable != "Checkout Events" && r.Measurement.FactTable != "Revenue Events" && r.Measurement.FactTable != "Warehouse Events" && r.Measurement.FactTable != "Simple Events" {
-				t.Errorf("measurement fact table should be a display name, got %q", r.Measurement.FactTable)
+			if !strings.HasPrefix(r.Measurement.Name, "measurements/") {
+				t.Errorf("measurement name not propagated: %q", r.Measurement.Name)
+			}
+			if !strings.HasPrefix(r.Measurement.FactTable, "factTables/") {
+				t.Errorf("measurement fact table should be a resource name, got %q", r.Measurement.FactTable)
 			}
 			if r.Measurement.Entity != "entities/user1" {
 				t.Errorf("measurement entity not resolved: %q", r.Measurement.Entity)
@@ -102,8 +109,11 @@ func TestBuildSyncResources(t *testing.T) {
 				t.Errorf("measurement %q lost its owner: %q", r.Measurement.DisplayName, r.Measurement.Owner)
 			}
 		case r.Metric != nil:
-			if r.Metric.Measurement == "" || r.Metric.Measurement[0] == 'm' && len(r.Metric.Measurement) > 12 && r.Metric.Measurement[:12] == "measurements" {
-				t.Errorf("metric measurement should be a display name, got %q", r.Metric.Measurement)
+			if !strings.HasPrefix(r.Metric.Name, "metrics/") {
+				t.Errorf("metric name not propagated: %q", r.Metric.Name)
+			}
+			if !strings.HasPrefix(r.Metric.Measurement, "measurements/") {
+				t.Errorf("metric measurement should be a resource name, got %q", r.Metric.Measurement)
 			}
 			if r.Metric.Source != nil {
 				t.Error("client must never set source — the server derives it from the reference")
@@ -121,5 +131,29 @@ func TestBuildSyncResourcesMissingEntity(t *testing.T) {
 		if r.FactTable != nil {
 			t.Error("fact tables with unresolvable entities must not be emitted")
 		}
+	}
+}
+
+func TestBuildSyncResourcesUsesExternalFactTableMetadata(t *testing.T) {
+	desired := Desired{Measurements: []DesiredMeasurement{{
+		Def: schema.Measurement{
+			Name: "measurements/revenue", DisplayName: "Revenue",
+			FactTable: "factTables/shared", Entity: "user", Measure: "revenue", Operation: "sum",
+		},
+	}}}
+	external := confidence.FactTable{
+		Name: "factTables/shared", DisplayName: "Shared Events",
+		Measures: []confidence.Measure{{
+			DisplayName: "revenue", Column: &confidence.Column{Name: "revenue_usd"},
+		}},
+	}
+
+	resources, diags := BuildSyncResources(desired, userRefs(), external)
+	if report.HasErrors(diags) {
+		t.Fatalf("unexpected diagnostics: %v", diags)
+	}
+	measurement := resources[0].Measurement
+	if measurement.FactTable != "factTables/shared" || measurement.TypeSpec.AverageMetricSpec.Measurement.Name != "revenue_usd" {
+		t.Fatalf("external fact table was not mapped correctly: %+v", measurement)
 	}
 }

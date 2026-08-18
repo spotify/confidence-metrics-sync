@@ -1,9 +1,11 @@
 measurements:
-  - display_name: Nothing Set
-    fact_table: Somewhere
+  - name: measurements/nothing-set
+    display_name: Nothing Set
+    fact_table: factTables/somewhere
     entity: user
-  - display_name: Mixed Up
-    fact_table: Somewhere
+  - name: measurements/mixed-up
+    display_name: Mixed Up
+    fact_table: factTables/somewhere
     entity: user
     measure: m
     operation: sum
@@ -13,17 +15,20 @@ measurements:
     denominator:
       measure: m
       operation: sum
-  - display_name: Only Measure
-    fact_table: Somewhere
+  - name: measurements/only-measure
+    display_name: Only Measure
+    fact_table: factTables/somewhere
     entity: user
     measure: m
-  - display_name: Only Numerator
-    fact_table: Somewhere
+  - name: measurements/only-numerator
+    display_name: Only Numerator
+    fact_table: factTables/somewhere
     entity: user
     numerator:
       measure: m
       operation: sum
-  - display_name: Sum Without Measure
-    fact_table: Somewhere
+  - name: measurements/sum-without-measure
+    display_name: Sum Without Measure
+    fact_table: factTables/somewhere
     entity: user
     operation: sum

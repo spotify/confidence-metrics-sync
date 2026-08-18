@@ -1,4 +1,4 @@
-testdata/invalid/ambiguous-measure/ambiguous.yaml:12:9: error[ambiguous-measure]: fact table "Ambiguous FT": named measure "value" shadows an unnamed measure with column "value" — references are ambiguous
-testdata/invalid/ambiguous-measure/ambiguous.yaml:14:9: error[duplicate-name]: fact table "Ambiguous FT" defines measure "value" more than once
-testdata/invalid/ambiguous-measure/ambiguous.yaml:14:9: error[ambiguous-measure]: fact table "Ambiguous FT": unnamed measure with column "value" is shadowed by a named measure "value" — references are ambiguous
+testdata/invalid/ambiguous-measure/ambiguous.yaml:13:9: error[ambiguous-measure]: fact table "Ambiguous FT": named measure "value" shadows an unnamed measure with column "value" — references are ambiguous
+testdata/invalid/ambiguous-measure/ambiguous.yaml:15:9: error[duplicate-name]: fact table "Ambiguous FT" defines measure "value" more than once
+testdata/invalid/ambiguous-measure/ambiguous.yaml:15:9: error[ambiguous-measure]: fact table "Ambiguous FT": unnamed measure with column "value" is shadowed by a named measure "value" — references are ambiguous
 ✗ 3 error(s), 0 warning(s) in 1 file(s)

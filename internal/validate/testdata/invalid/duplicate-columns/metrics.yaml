@@ -1,5 +1,6 @@
 fact_tables:
-  - display_name: Events
+  - name: factTables/events
+    display_name: Events
     table: a.b.c
     timestamp_column: t
     entities:

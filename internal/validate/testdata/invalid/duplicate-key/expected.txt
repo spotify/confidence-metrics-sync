@@ -1,2 +1,2 @@
-testdata/invalid/duplicate-key/metrics.yaml:4: error[duplicate-key]: mapping key "table" already defined at line 3
+testdata/invalid/duplicate-key/metrics.yaml:5: error[duplicate-key]: mapping key "table" already defined at line 4
 ✗ 1 error(s), 0 warning(s) in 1 file(s)

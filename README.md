@@ -23,7 +23,8 @@ confidence-metrics sync <path>       # apply definitions to Confidence
 # yaml-language-server: $schema=https://raw.githubusercontent.com/spotify/confidence-metrics-sync/main/internal/schema/metric.schema.json
 
 fact_tables:
-  - display_name: Hourly Stream
+  - name: factTables/hourly-stream
+    display_name: Hourly Stream
     table: analytics.prod.hourly_stream
     timestamp_column: event_time
     entities:
@@ -34,15 +35,17 @@ fact_tables:
         column: ms_played / 60000
 
 measurements:
-  - display_name: Hourly Minutes Played
-    fact_table: Hourly Stream
+  - name: measurements/hourly-minutes-played
+    display_name: Hourly Minutes Played
+    fact_table: factTables/hourly-stream
     entity: user
     measure: minutes_played
     operation: sum
     null_handling:
       replace_entity_null_with_zero: true
     metrics:
-      - display_name: Minutes Played - Day 1
+      - name: metrics/minutes-played-day-1
+        display_name: Minutes Played - Day 1
         measurement_window:
           aggregation_window: 86400s
         preferred_direction: increase
@@ -107,8 +110,9 @@ Runs on pull requests. Makes no changes.
 
 - Parses all YAML files under the given path and validates them against the
   [metrics schema](https://raw.githubusercontent.com/spotify/confidence-metrics-sync/main/internal/schema/metric.schema.json): structure,
-  types, enums, and cross-references (measurements exist, measures belong to
-  their fact table, no duplicate names).
+  types, enums, stable resource names, and locally declared relationships.
+  References may also point to active resources managed by another repository
+  or through the API; Confidence validates those during the server-side plan.
 - Runs each metric through Confidence's server-side validation.
 - Shows a dry-run plan against your Confidence account: what would be created,
   updated, deleted, or left unchanged.
@@ -128,10 +132,12 @@ Runs on merge. Reconciles Confidence with the repository:
 - Creates and updates fact tables, measurements, and metrics to match the
   YAML. Synced metrics are marked repo-managed and become read-only in the
   Confidence UI.
+- Uses `name` as stable identity. Changing `display_name` updates the same
+  resource; changing `name` creates a replacement and removes the old resource.
 - Archives metrics that this repository previously synced but that are no
   longer defined in the YAML — never hard-deletes. Re-adding the definition
   unarchives it.
-- Refuses to take over a metric that already exists in Confidence but is not
+- Refuses to take over a resource that already exists in Confidence but is not
   managed by this repository — a name collision can never silently overwrite
   another team's metric. Intentional migrations opt in with `sync --adopt-from`,
   which names the source being taken over, and `validate` always shows pending
@@ -149,6 +155,25 @@ Sync complete:
   Errors:    0
 ```
 
+### Stable resource names and shared dependencies
+
+Every fact table, measurement, and metric requires a full Confidence resource
+name (`factTables/...`, `measurements/...`, or `metrics/...`). Treat `name` as
+an immutable identifier: edit `display_name` for a user-facing rename. Editing
+`name` requests a replacement and can break consumers that reference the old
+resource.
+
+`fact_table` and `measurement` relationships also use resource names. The
+referenced resource does not need to be declared in the same repository: teams
+can build measurements on shared fact tables and metrics on shared
+measurements managed through the API or another repository. External resources
+are dependencies only; this repository does not adopt, update, or remove them.
+
+When migrating an existing repository, use `export` to discover the exact
+backend names and copy them into the definitions. Do not invent prettier IDs
+for existing resources, and require `validate` to report a no-op before the
+first sync with named definitions.
+
 ### Moving resources between repositories
 
 Ownership follows `--source-reference`, so moving a metric to another
@@ -162,18 +187,17 @@ repository is a transfer, in this order:
    and only the old repo can clear it.
 
 **Do not reverse these steps.** Removing the definitions from the old repo
-first archives the metric and *deletes* the measurement and fact table; the new
-repo then recreates those under fresh resource names, and anything that
-referenced the originals breaks. Adopting first is the only order that keeps
-resource names — and once ownership has moved, the old repo can no longer
-archive them, so step 2 is safe.
+first archives the metric and *deletes* the measurement and fact table. Stable
+names make restoration possible, but adopting first avoids any interval where
+the shared resource is unavailable. Once ownership has moved, the old repo can
+no longer archive it, so step 2 is safe.
 
 The same flag recovers from a mistyped `--source-reference`: sync once with
 `--adopt-from <the-typo>`.
 
 Remove `--adopt-from` once the migration has landed. Sync warns when an entry
-adopted nothing, because a flag left standing in CI would silently take over
-whatever collides on a display name next.
+adopted nothing, because a flag left standing in CI could silently take over
+whatever collides on a resource name next.
 
 ## Configuration
 

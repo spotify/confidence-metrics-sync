@@ -1,14 +1,17 @@
 measurements:
-  - display_name: Shared Measurement
-    fact_table: Events
+  - name: measurements/shared
+    display_name: Shared Measurement
+    fact_table: factTables/events
     entity: user
     measure: m
     operation: sum
     metrics:
-      - display_name: Conversion
+      - name: metrics/conversion
+        display_name: Conversion
 
 fact_tables:
-  - display_name: Events
+  - name: factTables/events
+    display_name: Events
     table: x.y.z
     timestamp_column: t
     entities:

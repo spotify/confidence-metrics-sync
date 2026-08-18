@@ -82,11 +82,11 @@ func Outcomes(w io.Writer, items []OutcomeItem, dryRun bool) {
 	}
 }
 
-// renameHints flags same-kind create+archive pairs in one plan. Display
-// names are identity, so a rename in the YAML is a create + archive: the
-// new resource starts with a fresh ID and empty history, and existing
-// references keep pointing at the archived original. That is easy to do
-// by accident and impossible to see from the summary counts alone.
+// renameHints flags same-kind create+archive pairs in one plan. A resource
+// name change is a create + archive: the replacement starts without the old
+// resource's history, and external references still point at the archived
+// original. That is easy to do by accident and impossible to see from the
+// summary counts alone.
 func renameHints(items []OutcomeItem) []string {
 	created := map[string][]string{}
 	archived := map[string][]string{}
@@ -115,7 +115,7 @@ func renameHints(items []OutcomeItem) []string {
 			continue
 		}
 		hints = append(hints, fmt.Sprintf(
-			"possible rename: this plan creates %s %s and archives %s. Display names are identity — a rename creates a new resource (fresh ID, no history) and archives the old one, and existing references keep pointing at the archived resource. If that is intended, ignore this warning.",
+			"possible resource-name change: this plan creates %s %s and archives %s. Changing name replaces the resource (without its history), while changing display_name updates it in place; external references keep pointing at the archived original. If replacement is intended, ignore this warning.",
 			kind, quotedList(created[kind]), quotedList(archived[kind])))
 	}
 	return hints

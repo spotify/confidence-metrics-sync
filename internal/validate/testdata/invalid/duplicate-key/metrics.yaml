@@ -1,5 +1,6 @@
 fact_tables:
-  - display_name: Dup Keys
+  - name: factTables/dup-keys
+    display_name: Dup Keys
     table: a.b.c
     table: d.e.f
     timestamp_column: t

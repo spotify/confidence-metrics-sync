@@ -134,6 +134,18 @@ func startFake(t *testing.T, fb *fakeBackend) {
 			_ = json.NewEncoder(w).Encode(map[string]any{"measurements": fb.listMeasurements})
 		case r.URL.Path == "/v1/factTables" && r.Method == http.MethodGet:
 			_ = json.NewEncoder(w).Encode(map[string]any{"factTables": fb.listFactTables})
+		case r.URL.Path == "/v1/factTables:batchGet" && r.Method == http.MethodGet:
+			requested := map[string]bool{}
+			for _, name := range r.URL.Query()["names"] {
+				requested[name] = true
+			}
+			var factTables []confidence.FactTable
+			for _, ft := range fb.listFactTables {
+				if requested[ft.Name] {
+					factTables = append(factTables, ft)
+				}
+			}
+			_ = json.NewEncoder(w).Encode(map[string]any{"factTables": factTables})
 		case r.URL.Path == "/v1/metrics:applyMetricsSync":
 			var req confidence.ApplyMetricsSyncRequest
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -195,14 +207,78 @@ func TestValidateDryRunAgainstAPI(t *testing.T) {
 	if len(req.Resources) != 27 {
 		t.Fatalf("expected 27 resources in request, got %d", len(req.Resources))
 	}
+	for _, resource := range req.Resources {
+		switch {
+		case resource.FactTable != nil:
+			if !strings.HasPrefix(resource.FactTable.Name, "factTables/") {
+				t.Errorf("fact table name not propagated: %q", resource.FactTable.Name)
+			}
+		case resource.Measurement != nil:
+			if !strings.HasPrefix(resource.Measurement.Name, "measurements/") || !strings.HasPrefix(resource.Measurement.FactTable, "factTables/") {
+				t.Errorf("measurement names not propagated: %+v", resource.Measurement)
+			}
+		case resource.Metric != nil:
+			if !strings.HasPrefix(resource.Metric.Name, "metrics/") || !strings.HasPrefix(resource.Metric.Measurement, "measurements/") {
+				t.Errorf("metric names not propagated: %+v", resource.Metric)
+			}
+		}
+	}
 	for _, s := range []string{"DRY RUN", "Would create", "Hourly Stream", "Old Metric"} {
 		if !strings.Contains(out, s) {
 			t.Errorf("output missing %q:\n%s", s, out)
 		}
 	}
 	// Created fact table + archived metric are different kinds — no rename hint.
-	if strings.Contains(out, "possible rename") {
+	if strings.Contains(out, "possible resource-name change") {
 		t.Errorf("cross-kind create+archive must not hint a rename:\n%s", out)
+	}
+}
+
+func TestValidateSupportsExternalResourceReferences(t *testing.T) {
+	dir := t.TempDir()
+	definition := `measurements:
+  - name: measurements/local-revenue
+    display_name: Local Revenue
+    fact_table: factTables/shared-events
+    entity: user
+    measure: revenue
+    operation: sum
+
+metrics:
+  - name: metrics/external-measurement
+    display_name: External Measurement Metric
+    entity: user
+    measurement: measurements/shared-measurement
+`
+	if err := os.WriteFile(filepath.Join(dir, "metrics.yaml"), []byte(definition), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	fb := &fakeBackend{
+		listFactTables: []confidence.FactTable{{
+			Name: "factTables/shared-events", DisplayName: "Shared Events",
+			Measures: []confidence.Measure{{
+				DisplayName: "revenue", Column: &confidence.Column{Name: "revenue_usd"},
+			}},
+		}},
+		syncResponse: confidence.ApplyMetricsSyncResponse{},
+	}
+	startFake(t, fb)
+
+	out, err := run(t, "validate", "--source-reference", "test-repo", dir)
+	if err != nil {
+		t.Fatalf("validate failed: %v\n%s", err, out)
+	}
+	req := fb.lastSync.Load()
+	if req == nil || len(req.Resources) != 2 {
+		t.Fatalf("unexpected sync request: %+v", req)
+	}
+	measurement := req.Resources[0].Measurement
+	if measurement == nil || measurement.FactTable != "factTables/shared-events" || measurement.TypeSpec.AverageMetricSpec.Measurement.Name != "revenue_usd" {
+		t.Fatalf("external fact table reference was not resolved: %+v", measurement)
+	}
+	metric := req.Resources[1].Metric
+	if metric == nil || metric.Measurement != "measurements/shared-measurement" {
+		t.Fatalf("external measurement reference was not preserved: %+v", metric)
 	}
 }
 
@@ -303,10 +379,10 @@ func TestValidateHintsPossibleRename(t *testing.T) {
 	if err != nil {
 		t.Fatalf("validate failed: %v\n%s", err, out)
 	}
-	// A same-kind create+archive pair is what a rename looks like under
-	// display-name matching — the PR check must call it out.
+	// A same-kind create+archive pair can indicate an accidental resource-name
+	// edit, so the PR check must call it out.
 	for _, s := range []string{
-		"possible rename",
+		"possible resource-name change",
 		`creates metric "Minutes Played v2"`,
 		`archives "Minutes Played"`,
 	} {
@@ -794,7 +870,8 @@ func friendlyOwnerFixture(t *testing.T, owner string) string {
 	t.Helper()
 	dir := t.TempDir()
 	yaml := fmt.Sprintf(`fact_tables:
-  - display_name: Events
+  - name: factTables/events
+    display_name: Events
     table: a.b.c
     timestamp_column: t
     entities:
@@ -805,14 +882,16 @@ func friendlyOwnerFixture(t *testing.T, owner string) string {
         column: c
 
 measurements:
-  - display_name: Test Measurement
-    fact_table: Events
+  - name: measurements/test-measurement
+    display_name: Test Measurement
+    fact_table: factTables/events
     entity: user
     owner: %s
     measure: m
     operation: sum
     metrics:
-      - display_name: Test Metric
+      - name: metrics/test-metric
+        display_name: Test Metric
 `, owner)
 	if err := os.WriteFile(filepath.Join(dir, "metrics.yaml"), []byte(yaml), 0o644); err != nil {
 		t.Fatal(err)

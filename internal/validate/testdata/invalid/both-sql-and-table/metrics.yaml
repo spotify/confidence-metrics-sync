@@ -1,5 +1,6 @@
 fact_tables:
-  - display_name: Two Sources
+  - name: factTables/two-sources
+    display_name: Two Sources
     sql: SELECT 1
     table: a.b.c
     timestamp_column: t
@@ -9,7 +10,8 @@ fact_tables:
     measures:
       - display_name: m
         column: c
-  - display_name: No Source
+  - name: factTables/no-source
+    display_name: No Source
     timestamp_column: t
     entities:
       - entity: user
