@@ -29,9 +29,10 @@ pattern: plain text must match the full name — quote names with spaces
 glob matching ('*conversion*'). Multiple patterns select the union; no
 patterns exports every metric.
 
-Resource names are preserved and references use exact resource names. A
-reference may point to a resource managed through the API or another
-repository. Use --with-dependencies when bootstrapping a self-contained repo:
+Resource names are preserved and references use exact resource names. By
+default, only the selected metrics are exported, so the result is a partial
+snippet whose referenced measurements are not included. Use
+--with-dependencies to produce definitions that can be validated and synced:
 it also exports each selected metric's measurement and that measurement's
 fact table.
 

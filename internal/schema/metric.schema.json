@@ -215,7 +215,7 @@
         "fact_table": {
           "type": "string",
           "pattern": "^factTables/[^/\\s]+$",
-          "description": "Resource name of the fact table containing the measure. The fact table may be managed by this repository, another repository, or the API."
+          "description": "Resource name of the fact table containing the measure. It must be declared somewhere in the same repository snapshot."
         },
         "entity": {
           "type": "string",
@@ -359,7 +359,7 @@
         "measurement": {
           "type": "string",
           "pattern": "^measurements/[^/\\s]+$",
-          "description": "Resource name of the measurement this metric uses. The measurement may be managed by this repository, another repository, or the API."
+          "description": "Resource name of the measurement this metric uses. It must be declared somewhere in the same repository snapshot."
         },
         "owner": {
           "type": "string",

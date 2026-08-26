@@ -31,19 +31,13 @@ func loadValidated(path string) (files []*parser.File, found int, diags []report
 
 // buildSyncRequest maps the parsed files to an ApplyMetricsSync request.
 // Entity references are resolved against the account. Resource relationships
-// are sent by exact name. Externally managed fact tables are fetched only to
-// resolve their measure display names to wire column names.
+// are sent by exact name and must resolve within the repository snapshot.
 func buildSyncRequest(ctx context.Context, client *confidence.Client, files []*parser.File, sourceReference string, dryRun bool, adoptFrom []string) (*confidence.ApplyMetricsSyncRequest, []report.Diagnostic, error) {
 	entities, err := client.ListEntities(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("listing entities: %w", err)
 	}
 	desired := plan.Normalize(files)
-	externalFactTableNames := plan.ExternalFactTableNames(desired)
-	externalFactTables, err := client.BatchGetFactTables(ctx, externalFactTableNames)
-	if err != nil {
-		return nil, nil, fmt.Errorf("loading referenced fact tables: %w", err)
-	}
 
 	// Resolve friendly owner names (display name / email): never auto-
 	// substitutes, always fails with a paste-ready pinned replacement.
@@ -52,7 +46,7 @@ func buildSyncRequest(ctx context.Context, client *confidence.Client, files []*p
 		return nil, nil, err
 	}
 
-	resources, diags := plan.BuildSyncResources(desired, plan.RefsFromEntities(entities), externalFactTables...)
+	resources, diags := plan.BuildSyncResources(desired, plan.RefsFromEntities(entities))
 	diags = append(diags, rdiags...)
 
 	// Owners are stored after a syntax parse only, so a well-formed but wrong

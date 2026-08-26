@@ -110,9 +110,9 @@ Runs on pull requests. Makes no changes.
 
 - Parses all YAML files under the given path and validates them against the
   [metrics schema](https://raw.githubusercontent.com/spotify/confidence-metrics-sync/main/internal/schema/metric.schema.json): structure,
-  types, enums, stable resource names, and locally declared relationships.
-  References may also point to active resources managed by another repository
-  or through the API; Confidence validates those during the server-side plan.
+  types, enums, stable resource names, and relationships. A measurement's fact
+  table and a metric's measurement must be declared somewhere under the same
+  path; undeclared references are reported at their YAML location.
 - Runs each metric through Confidence's server-side validation.
 - Shows a dry-run plan against your Confidence account: what would be created,
   updated, deleted, or left unchanged.
@@ -155,7 +155,7 @@ Sync complete:
   Errors:    0
 ```
 
-### Stable resource names and shared dependencies
+### Stable resource names and repository-local relationships
 
 Every fact table, measurement, and metric requires a full Confidence resource
 name (`factTables/...`, `measurements/...`, or `metrics/...`). Treat `name` as
@@ -163,11 +163,11 @@ an immutable identifier: edit `display_name` for a user-facing rename. Editing
 `name` requests a replacement and can break consumers that reference the old
 resource.
 
-`fact_table` and `measurement` relationships also use resource names. The
-referenced resource does not need to be declared in the same repository: teams
-can build measurements on shared fact tables and metrics on shared
-measurements managed through the API or another repository. External resources
-are dependencies only; this repository does not adopt, update, or remove them.
+`fact_table` and `measurement` relationships also use resource names. Every
+referenced fact table and measurement must be declared somewhere under the
+path passed to `validate` or `sync`; references may cross YAML files within
+that repository snapshot. This keeps the submitted graph self-contained and
+matches the server's atomic reconciliation contract.
 
 When migrating an existing repository, use `export` to discover the exact
 backend names and copy them into the definitions. Do not invent prettier IDs

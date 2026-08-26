@@ -7,7 +7,6 @@ import (
 	"github.com/spotify/confidence-metrics-sync/internal/confidence"
 	"github.com/spotify/confidence-metrics-sync/internal/parser"
 	"github.com/spotify/confidence-metrics-sync/internal/report"
-	"github.com/spotify/confidence-metrics-sync/internal/schema"
 )
 
 func desiredFixture(t *testing.T) Desired {
@@ -131,29 +130,5 @@ func TestBuildSyncResourcesMissingEntity(t *testing.T) {
 		if r.FactTable != nil {
 			t.Error("fact tables with unresolvable entities must not be emitted")
 		}
-	}
-}
-
-func TestBuildSyncResourcesUsesExternalFactTableMetadata(t *testing.T) {
-	desired := Desired{Measurements: []DesiredMeasurement{{
-		Def: schema.Measurement{
-			Name: "measurements/revenue", DisplayName: "Revenue",
-			FactTable: "factTables/shared", Entity: "user", Measure: "revenue", Operation: "sum",
-		},
-	}}}
-	external := confidence.FactTable{
-		Name: "factTables/shared", DisplayName: "Shared Events",
-		Measures: []confidence.Measure{{
-			DisplayName: "revenue", Column: &confidence.Column{Name: "revenue_usd"},
-		}},
-	}
-
-	resources, diags := BuildSyncResources(desired, userRefs(), external)
-	if report.HasErrors(diags) {
-		t.Fatalf("unexpected diagnostics: %v", diags)
-	}
-	measurement := resources[0].Measurement
-	if measurement.FactTable != "factTables/shared" || measurement.TypeSpec.AverageMetricSpec.Measurement.Name != "revenue_usd" {
-		t.Fatalf("external fact table was not mapped correctly: %+v", measurement)
 	}
 }

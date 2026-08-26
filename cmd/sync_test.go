@@ -134,18 +134,6 @@ func startFake(t *testing.T, fb *fakeBackend) {
 			_ = json.NewEncoder(w).Encode(map[string]any{"measurements": fb.listMeasurements})
 		case r.URL.Path == "/v1/factTables" && r.Method == http.MethodGet:
 			_ = json.NewEncoder(w).Encode(map[string]any{"factTables": fb.listFactTables})
-		case r.URL.Path == "/v1/factTables:batchGet" && r.Method == http.MethodGet:
-			requested := map[string]bool{}
-			for _, name := range r.URL.Query()["names"] {
-				requested[name] = true
-			}
-			var factTables []confidence.FactTable
-			for _, ft := range fb.listFactTables {
-				if requested[ft.Name] {
-					factTables = append(factTables, ft)
-				}
-			}
-			_ = json.NewEncoder(w).Encode(map[string]any{"factTables": factTables})
 		case r.URL.Path == "/v1/metrics:applyMetricsSync":
 			var req confidence.ApplyMetricsSyncRequest
 			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -234,51 +222,26 @@ func TestValidateDryRunAgainstAPI(t *testing.T) {
 	}
 }
 
-func TestValidateSupportsExternalResourceReferences(t *testing.T) {
-	dir := t.TempDir()
-	definition := `measurements:
-  - name: measurements/local-revenue
-    display_name: Local Revenue
-    fact_table: factTables/shared-events
-    entity: user
-    measure: revenue
-    operation: sum
+func TestUndeclaredReferencesStopValidateAndSyncBeforeAPIApply(t *testing.T) {
+	for _, command := range []string{"validate", "sync"} {
+		t.Run(command, func(t *testing.T) {
+			fb := &fakeBackend{}
+			startFake(t, fb)
 
-metrics:
-  - name: metrics/external-measurement
-    display_name: External Measurement Metric
-    entity: user
-    measurement: measurements/shared-measurement
-`
-	if err := os.WriteFile(filepath.Join(dir, "metrics.yaml"), []byte(definition), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	fb := &fakeBackend{
-		listFactTables: []confidence.FactTable{{
-			Name: "factTables/shared-events", DisplayName: "Shared Events",
-			Measures: []confidence.Measure{{
-				DisplayName: "revenue", Column: &confidence.Column{Name: "revenue_usd"},
-			}},
-		}},
-		syncResponse: confidence.ApplyMetricsSyncResponse{},
-	}
-	startFake(t, fb)
-
-	out, err := run(t, "validate", "--source-reference", "test-repo", dir)
-	if err != nil {
-		t.Fatalf("validate failed: %v\n%s", err, out)
-	}
-	req := fb.lastSync.Load()
-	if req == nil || len(req.Resources) != 2 {
-		t.Fatalf("unexpected sync request: %+v", req)
-	}
-	measurement := req.Resources[0].Measurement
-	if measurement == nil || measurement.FactTable != "factTables/shared-events" || measurement.TypeSpec.AverageMetricSpec.Measurement.Name != "revenue_usd" {
-		t.Fatalf("external fact table reference was not resolved: %+v", measurement)
-	}
-	metric := req.Resources[1].Metric
-	if metric == nil || metric.Measurement != "measurements/shared-measurement" {
-		t.Fatalf("external measurement reference was not preserved: %+v", metric)
+			args := []string{command, "--source-reference", "test-repo", "../internal/validate/testdata/invalid/dangling-refs"}
+			out, err := run(t, args...)
+			if !errors.Is(err, errFindings) {
+				t.Fatalf("expected positioned findings, got %v\n%s", err, out)
+			}
+			for _, rule := range []string{"error[unknown-fact-table]", "error[unknown-measurement]"} {
+				if !strings.Contains(out, rule) {
+					t.Errorf("output is missing %s:\n%s", rule, out)
+				}
+			}
+			if fb.lastSync.Load() != nil {
+				t.Fatal("invalid repository references must stop before ApplyMetricsSync")
+			}
+		})
 	}
 }
 

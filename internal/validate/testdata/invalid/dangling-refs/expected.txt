@@ -1,5 +1,7 @@
+testdata/invalid/dangling-refs/metrics.yaml:19:5: error[unknown-fact-table]: measurement "Ghost Table" references fact table "factTables/external", which is not defined in this repository
 testdata/invalid/dangling-refs/metrics.yaml:27:5: error[unknown-measure]: measurement "Ghost Measure" aggregates measure "views", which fact table "Events" does not define (measures: [clicks])
 testdata/invalid/dangling-refs/metrics.yaml:32:5: error[unknown-entity]: measurement "Ghost Entity" uses entity "session", but fact table "Events" maps entities [user]
 testdata/invalid/dangling-refs/metrics.yaml:42:9: error[unknown-dimension]: measurement "Ghost Dimension" filters on dimension "country", which fact table "Events" does not define (dimensions: [platform])
+testdata/invalid/dangling-refs/metrics.yaml:50:5: error[unknown-measurement]: metric "Ghost Measurement Metric" references measurement "measurements/external", which is not defined in this repository
 testdata/invalid/dangling-refs/metrics.yaml:53:5: error[entity-mismatch]: metric "Mismatched Entity Metric" is for entity "session" but measurement "Ghost Measure" is computed for entity "user"
-✗ 4 error(s), 0 warning(s) in 1 file(s)
+✗ 6 error(s), 0 warning(s) in 1 file(s)

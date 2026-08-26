@@ -15,9 +15,9 @@ type located struct {
 }
 
 // semantic runs cross-reference checks across ALL files. Resource names are
-// identity; display names remain unique as a separate authoring rule. Local
-// references receive detailed validation, while external resource-name
-// references are left for ApplyMetricsSync to validate against the account.
+// identity; display names remain unique as a separate authoring rule.
+// Definitions are expected to be self-contained: relationships must resolve
+// to resources declared somewhere in the repository snapshot.
 func semantic(files []*parser.File) []report.Diagnostic {
 	var diags []report.Diagnostic
 
@@ -82,6 +82,10 @@ func semantic(files []*parser.File) []report.Diagnostic {
 		for i, m := range f.Def.Measurements {
 			ptr := fmt.Sprintf("/measurements/%d", i)
 			ft, ok := factTableDefs[m.FactTable]
+			if m.FactTable != "" && !ok {
+				diags = append(diags, diag(f, ptr+"/fact_table", "unknown-fact-table",
+					fmt.Sprintf("measurement %q references fact table %q, which is not defined in this repository", m.DisplayName, m.FactTable)))
+			}
 
 			if ok && m.Entity != "" && !hasEntity(ft, m.Entity) {
 				diags = append(diags, diag(f, ptr+"/entity", "unknown-entity",
@@ -113,6 +117,11 @@ func semantic(files []*parser.File) []report.Diagnostic {
 				return // nested metrics inherit measurement and entity
 			}
 			ms, ok := measurementDefs[mt.Measurement]
+			if mt.Measurement != "" && !ok {
+				diags = append(diags, diag(f, ptr+"/measurement", "unknown-measurement",
+					fmt.Sprintf("metric %q references measurement %q, which is not defined in this repository", mt.DisplayName, mt.Measurement)))
+				return
+			}
 			if ok && mt.Entity != "" && ms.Entity != "" && mt.Entity != ms.Entity {
 				diags = append(diags, diag(f, ptr+"/entity", "entity-mismatch",
 					fmt.Sprintf("metric %q is for entity %q but measurement %q is computed for entity %q", mt.DisplayName, mt.Entity, ms.DisplayName, ms.Entity)))

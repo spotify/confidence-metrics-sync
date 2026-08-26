@@ -1,7 +1,12 @@
 testdata/invalid/no-aggregation/metrics.yaml:2:5: error[aggregation-exclusive]: measurement "Nothing Set" needs an aggregation: set `measure`+`operation`, or `numerator`+`denominator`
+testdata/invalid/no-aggregation/metrics.yaml:4:5: error[unknown-fact-table]: measurement "Nothing Set" references fact table "factTables/somewhere", which is not defined in this repository
 testdata/invalid/no-aggregation/metrics.yaml:6:5: error[aggregation-exclusive]: measurement "Mixed Up" mixes simple (`measure`/`operation`) and ratio (`numerator`/`denominator`) aggregation — use one or the other
+testdata/invalid/no-aggregation/metrics.yaml:8:5: error[unknown-fact-table]: measurement "Mixed Up" references fact table "factTables/somewhere", which is not defined in this repository
 testdata/invalid/no-aggregation/metrics.yaml:18:5: error[aggregation-exclusive]: measurement "Only Measure" needs an `operation` for simple aggregation
+testdata/invalid/no-aggregation/metrics.yaml:20:5: error[unknown-fact-table]: measurement "Only Measure" references fact table "factTables/somewhere", which is not defined in this repository
 testdata/invalid/no-aggregation/metrics.yaml:23:5: error[aggregation-exclusive]: measurement "Only Numerator" needs both `numerator` and `denominator` for ratio aggregation
+testdata/invalid/no-aggregation/metrics.yaml:25:5: error[unknown-fact-table]: measurement "Only Numerator" references fact table "factTables/somewhere", which is not defined in this repository
 testdata/invalid/no-aggregation/metrics.yaml:30:5: error[aggregation-exclusive]: measurement "Sum Without Measure" needs a `measure` for operation "sum" (only `count` works without one)
+testdata/invalid/no-aggregation/metrics.yaml:32:5: error[unknown-fact-table]: measurement "Sum Without Measure" references fact table "factTables/somewhere", which is not defined in this repository
 testdata/invalid/no-aggregation/metrics.yaml:34:5: error[schema]: measurements[4].operation: value must be 'count'
-✗ 6 error(s), 0 warning(s) in 1 file(s)
+✗ 11 error(s), 0 warning(s) in 1 file(s)
