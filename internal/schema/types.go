@@ -41,6 +41,7 @@ func (s ExactText) MarshalYAML() (interface{}, error) {
 // FactTable defines a data source with entity mappings, measures, and
 // optional dimensions. Exactly one of SQL or Table must be set.
 type FactTable struct {
+	Name            string            `yaml:"name,omitempty"`
 	DisplayName     string            `yaml:"display_name,omitempty"`
 	SQL             ExactText         `yaml:"sql,omitempty"`
 	Table           string            `yaml:"table,omitempty"`
@@ -87,6 +88,7 @@ type Dimension struct {
 // handling. Either Measure+Operation (simple) or Numerator+Denominator
 // (ratio) is set, never both.
 type Measurement struct {
+	Name                 string                `yaml:"name,omitempty"`
 	DisplayName          string                `yaml:"display_name,omitempty"`
 	FactTable            string                `yaml:"fact_table,omitempty"`
 	Entity               string                `yaml:"entity,omitempty"`
@@ -124,6 +126,7 @@ type VarianceReduction struct {
 }
 
 type Metric struct {
+	Name               string             `yaml:"name,omitempty"`
 	DisplayName        string             `yaml:"display_name,omitempty"`
 	Entity             string             `yaml:"entity,omitempty"`
 	Measurement        string             `yaml:"measurement,omitempty"`

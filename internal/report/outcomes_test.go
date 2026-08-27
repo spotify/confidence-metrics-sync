@@ -34,7 +34,7 @@ func TestRenameHintOnSameKindCreateArchivePair(t *testing.T) {
 
 	out := b.String()
 	for _, s := range []string{
-		"possible rename",
+		"possible resource-name change",
 		`creates metric "Minutes Played v2"`,
 		`archives "Minutes Played"`,
 	} {
@@ -53,7 +53,7 @@ func TestNoRenameHintAcrossKinds(t *testing.T) {
 		{Kind: "metric", DisplayName: "Old Metric", Action: "ARCHIVE"},
 	}, true)
 
-	if strings.Contains(b.String(), "possible rename") {
+	if strings.Contains(b.String(), "possible resource-name change") {
 		t.Errorf("cross-kind create+archive must not hint a rename:\n%s", b.String())
 	}
 }
@@ -65,7 +65,7 @@ func TestNoRenameHintWithoutArchive(t *testing.T) {
 		{Kind: "metric", DisplayName: "Existing", Action: "UNCHANGED"},
 	}, false)
 
-	if strings.Contains(b.String(), "possible rename") {
+	if strings.Contains(b.String(), "possible resource-name change") {
 		t.Errorf("create without archive must not hint a rename:\n%s", b.String())
 	}
 }

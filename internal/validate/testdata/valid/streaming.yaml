@@ -1,7 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/spotify/confidence-metrics-sync/main/internal/schema/metric.schema.json
 
 fact_tables:
-  - display_name: Hourly Stream
+  - name: factTables/hourly-stream
+    display_name: Hourly Stream
     table: analytics.prod.hourly_stream
     timestamp_column: event_time
     description: Hourly streaming aggregates per user.
@@ -21,8 +22,9 @@ fact_tables:
         column: content_type
 
 measurements:
-  - display_name: Hourly Minutes Played
-    fact_table: Hourly Stream
+  - name: measurements/hourly-minutes-played
+    display_name: Hourly Minutes Played
+    fact_table: factTables/hourly-stream
     entity: user
     owner: identities/abc123
     measure: minutes_played
@@ -30,19 +32,22 @@ measurements:
     null_handling:
       replace_entity_null_with_zero: true
     metrics:
-      - display_name: Minutes Played - Day 1
+      - name: metrics/minutes-played-day-1
+        display_name: Minutes Played - Day 1
         preferred_direction: increase
         default_effect_size: 0.01
         measurement_window:
           aggregation_window: 86400s
-      - display_name: Minutes Played - Day 7
+      - name: metrics/minutes-played-day-7
+        display_name: Minutes Played - Day 7
         preferred_direction: increase
         measurement_window:
           aggregation_window: 604800s
           exposure_offset: 0s
 
-  - display_name: Podcast Minutes Played
-    fact_table: Hourly Stream
+  - name: measurements/podcast-minutes-played
+    display_name: Podcast Minutes Played
+    fact_table: factTables/hourly-stream
     entity: user
     measure: minutes_played
     operation: sum
@@ -51,8 +56,9 @@ measurements:
         operation: equals
         values: [podcast]
 
-  - display_name: Stream Count
-    fact_table: Hourly Stream
+  - name: measurements/stream-count
+    display_name: Stream Count
+    fact_table: factTables/hourly-stream
     entity: user
     description: Number of stream facts per user; count needs no measure.
     operation: count

@@ -1,0 +1,26 @@
+fact_tables:
+  - display_name: Missing Name
+    table: a.b.c
+    timestamp_column: t
+    entities:
+      - entity: user
+        column: user_id
+    measures:
+      - display_name: m
+        column: c
+
+measurements:
+  - name: metrics/wrong-prefix
+    display_name: Wrong Prefix
+    fact_table: Missing Name
+    entity: user
+    measure: m
+    operation: sum
+    metrics:
+      - display_name: Missing Nested Metric Name
+
+metrics:
+  - name: metrics/too/many-segments
+    display_name: Bad Metric Name
+    entity: user
+    measurement: Wrong Prefix

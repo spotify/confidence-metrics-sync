@@ -27,6 +27,11 @@
       "type": "object",
       "description": "A fact table defining a data source with entity mappings, measures, and optional dimensions.",
       "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^factTables/[^/\\s]+$",
+          "description": "Stable Confidence resource name of the fact table."
+        },
         "display_name": {
           "type": "string",
           "minLength": 1,
@@ -79,7 +84,7 @@
           "description": "Custom key-value labels."
         }
       },
-      "required": ["display_name", "timestamp_column", "entities", "measures"],
+      "required": ["name", "display_name", "timestamp_column", "entities", "measures"],
       "oneOf": [
         { "required": ["sql"], "not": { "required": ["table"] } },
         { "required": ["table"], "not": { "required": ["sql"] } }
@@ -197,6 +202,11 @@
       "type": "object",
       "description": "An aggregation specification. Bundles a fact table, measure, operation, and null handling.",
       "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^measurements/[^/\\s]+$",
+          "description": "Stable Confidence resource name of the measurement."
+        },
         "display_name": {
           "type": "string",
           "minLength": 1,
@@ -204,8 +214,8 @@
         },
         "fact_table": {
           "type": "string",
-          "minLength": 1,
-          "description": "Display name of the fact table containing the measure."
+          "pattern": "^factTables/[^/\\s]+$",
+          "description": "Resource name of the fact table containing the measure. It must be declared somewhere in the same repository snapshot."
         },
         "entity": {
           "type": "string",
@@ -273,7 +283,7 @@
           "items": { "$ref": "#/$defs/nested_metric" }
         }
       },
-      "required": ["display_name", "fact_table", "entity"],
+      "required": ["name", "display_name", "fact_table", "entity"],
       "oneOf": [
         {
           "required": ["operation"],
@@ -329,8 +339,13 @@
 
     "flat_metric": {
       "type": "object",
-      "description": "A metric defined in the top-level metrics list, referencing a measurement by display name.",
+      "description": "A metric defined in the top-level metrics list, referencing a measurement by resource name.",
       "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^metrics/[^/\\s]+$",
+          "description": "Stable Confidence resource name of the metric."
+        },
         "display_name": {
           "type": "string",
           "minLength": 1,
@@ -343,8 +358,8 @@
         },
         "measurement": {
           "type": "string",
-          "minLength": 1,
-          "description": "Display name of the measurement this metric uses."
+          "pattern": "^measurements/[^/\\s]+$",
+          "description": "Resource name of the measurement this metric uses. It must be declared somewhere in the same repository snapshot."
         },
         "owner": {
           "type": "string",
@@ -384,7 +399,7 @@
           "description": "Variance reduction configuration."
         }
       },
-      "required": ["display_name", "entity", "measurement"],
+      "required": ["name", "display_name", "entity", "measurement"],
       "additionalProperties": false
     },
 
@@ -392,6 +407,11 @@
       "type": "object",
       "description": "A metric nested under a measurement. The measurement and entity are inherited from the parent.",
       "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^metrics/[^/\\s]+$",
+          "description": "Stable Confidence resource name of the metric."
+        },
         "display_name": {
           "type": "string",
           "minLength": 1,
@@ -435,7 +455,7 @@
           "description": "Variance reduction configuration."
         }
       },
-      "required": ["display_name"],
+      "required": ["name", "display_name"],
       "additionalProperties": false
     },
 

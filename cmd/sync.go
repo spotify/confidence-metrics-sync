@@ -55,13 +55,13 @@ Moving a resource between repositories takes two changes, in this order:
      resource it still declares now belongs to someone else.
 
 Never the reverse. Removing them from the old repo first archives the
-metric and DELETES the measurement and fact table, and the new repo then
-recreates those under fresh resource names, breaking anything that
-referenced the originals.
+metric and DELETES the measurement and fact table. Stable names make
+restoration possible, but adopting first avoids an interval where the
+resource is unavailable.
 
 Adoption is a one-time migration step with no undo — remove the flag once
 the migration has landed and never leave it enabled in CI, or a future
-display-name collision is silently taken over.`,
+resource-name collision is silently taken over.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			files, found, diags, err := loadValidated(args[0])

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strconv"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -37,39 +36,31 @@ func TestRoundTrip(t *testing.T) {
 		t.Fatalf("fixture mapping: %v", bdiags)
 	}
 
-	// Give the "stored" resources server-assigned names so references work.
+	// Model the server's stored state. Caller-selected names and references
+	// must survive export and re-import unchanged.
 	var factTables []confidence.FactTable
 	var measurements []confidence.Measurement
 	var metrics []confidence.Metric
-	ftNames := map[string]string{}
-	for i, r := range original {
+	for _, r := range original {
 		switch {
 		case r.FactTable != nil:
 			ft := *r.FactTable
-			ft.Name = "factTables/ft" + strconv.Itoa(i)
 			ft.State = "TABLE_STATE_ACTIVE"
-			ftNames[ft.DisplayName] = ft.Name
 			factTables = append(factTables, ft)
 		}
 	}
-	msNames := map[string]string{}
-	for i, r := range original {
+	for _, r := range original {
 		if r.Measurement == nil {
 			continue
 		}
 		m := *r.Measurement
-		m.Name = "measurements/ms" + strconv.Itoa(i)
-		m.FactTable = ftNames[m.FactTable] // server stores resource names
-		msNames[m.DisplayName] = m.Name
 		measurements = append(measurements, m)
 	}
-	for i, r := range original {
+	for _, r := range original {
 		if r.Metric == nil {
 			continue
 		}
 		m := *r.Metric
-		m.Name = "metrics/m" + strconv.Itoa(i)
-		m.Measurement = msNames[m.Measurement]
 		m.State = "ACTIVE"
 		metrics = append(metrics, m)
 	}

@@ -3,7 +3,8 @@
 # filters, and quantile measurements.
 
 fact_tables:
-  - display_name: Warehouse Events
+  - name: factTables/warehouse-events
+    display_name: Warehouse Events
     sql: SELECT user_id, event_time, amount FROM warehouse.events
     timestamp_column: event_time
     entities:
@@ -18,8 +19,9 @@ fact_tables:
 
 measurements:
   # Item 1: value cap on an average measurement
-  - display_name: Capped Revenue
-    fact_table: Revenue Events
+  - name: measurements/capped-revenue
+    display_name: Capped Revenue
+    fact_table: factTables/revenue-events
     entity: user
     measure: revenue
     operation: sum
@@ -27,8 +29,9 @@ measurements:
       max: 1000
 
   # Item 1: value cap on a ratio measurement (numerator + denominator)
-  - display_name: Capped Conversion
-    fact_table: Checkout Events
+  - name: measurements/capped-conversion
+    display_name: Capped Conversion
+    fact_table: factTables/checkout-events
     entity: user
     numerator:
       measure: checkouts_completed
@@ -42,8 +45,9 @@ measurements:
         max: 100
 
   # Item 3: like filter
-  - display_name: High Value Streams
-    fact_table: Hourly Stream
+  - name: measurements/high-value-streams
+    display_name: High Value Streams
+    fact_table: factTables/hourly-stream
     entity: user
     measure: minutes_played
     operation: sum
@@ -56,7 +60,8 @@ measurements:
         values: ["ios%"]
     metrics:
       # Item 2: metric-level filter on a nested metric
-      - display_name: High Value Streams - Day 1
+      - name: metrics/high-value-streams-day-1
+        display_name: High Value Streams - Day 1
         measurement_window:
           aggregation_window: 86400s
         filters:
@@ -65,20 +70,23 @@ measurements:
             values: [ios]
 
   # Item 4: quantile measurement
-  - display_name: Median Minutes Played
-    fact_table: Hourly Stream
+  - name: measurements/median-minutes-played
+    display_name: Median Minutes Played
+    fact_table: factTables/hourly-stream
     entity: user
     measure: minutes_played
     operation: sum
     quantile_level: 0.5
     metrics:
-      - display_name: Median Minutes - Day 1
+      - name: metrics/median-minutes-day-1
+        display_name: Median Minutes - Day 1
         measurement_window:
           aggregation_window: 86400s
 
   # Item 5: measurement on warehouse fact table
-  - display_name: Warehouse Amount
-    fact_table: Warehouse Events
+  - name: measurements/warehouse-amount
+    display_name: Warehouse Amount
+    fact_table: factTables/warehouse-events
     entity: user
     measure: amount
     operation: sum
@@ -89,9 +97,10 @@ measurements:
 
 metrics:
   # Item 2: metric-level filter on a flat metric
-  - display_name: Revenue - Filtered
+  - name: metrics/revenue-filtered
+    display_name: Revenue - Filtered
     entity: user
-    measurement: Capped Revenue
+    measurement: measurements/capped-revenue
     measurement_window:
       aggregation_window: 86400s
     filters:
@@ -100,9 +109,10 @@ metrics:
         values: [web]
 
   # Item 3: range filter (between) on a flat metric
-  - display_name: Revenue - Between
+  - name: metrics/revenue-between
+    display_name: Revenue - Between
     entity: user
-    measurement: Capped Revenue
+    measurement: measurements/capped-revenue
     measurement_window:
       aggregation_window: 86400s
     filters:

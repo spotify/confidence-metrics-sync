@@ -30,8 +30,8 @@ func loadValidated(path string) (files []*parser.File, found int, diags []report
 }
 
 // buildSyncRequest maps the parsed files to an ApplyMetricsSync request.
-// Entity references are resolved against the account; everything else is
-// sent by display name for the server to resolve.
+// Entity references are resolved against the account. Resource relationships
+// are sent by exact name and must resolve within the repository snapshot.
 func buildSyncRequest(ctx context.Context, client *confidence.Client, files []*parser.File, sourceReference string, dryRun bool, adoptFrom []string) (*confidence.ApplyMetricsSyncRequest, []report.Diagnostic, error) {
 	entities, err := client.ListEntities(ctx)
 	if err != nil {
@@ -84,7 +84,7 @@ func checkAdoptFrom(sourceReference string, adoptFrom []string) error {
 // unusedAdoptFrom warns about --adopt-from entries that took nothing over.
 // Adoption is a one-time migration step, so an entry that adopted nothing has
 // either already done its job or names the wrong source — and a flag left
-// standing in CI is what turns a future display-name collision into a silent
+// standing in CI is what turns a future resource-name collision into a silent
 // takeover. Skipped when any resource errored: nothing was adopted because
 // nothing was applied, which says nothing about the flag.
 func unusedAdoptFrom(adoptFrom []string, items []report.OutcomeItem) []report.Diagnostic {
@@ -108,7 +108,7 @@ func unusedAdoptFrom(adoptFrom []string, items []report.OutcomeItem) []report.Di
 	}
 	return []report.Diagnostic{{
 		Severity: report.Warning, Rule: "adopt-from",
-		Message: fmt.Sprintf("--adopt-from %s adopted nothing — drop the flag once the migration has landed, and never leave it standing in CI: it would silently take over a resource that later collides on display name",
+		Message: fmt.Sprintf("--adopt-from %s adopted nothing — drop the flag once the migration has landed, and never leave it standing in CI: it would silently take over a resource that later collides on resource name",
 			strings.Join(quoted(unused), ", ")),
 	}}
 }

@@ -8,11 +8,9 @@ import (
 	"github.com/spotify/confidence-metrics-sync/internal/schema"
 )
 
-// Refs resolves entity display names to API resource names. Entities are the
-// only resource the CLI must resolve itself: fact table and measurement
-// references inside the request are sent as DISPLAY NAMES — ApplyMetricsSync
-// resolves those display-name-first (covering resources created in the same
-// request), falling back to resource names.
+// Refs resolves entity display names to API resource names. Fact-table and
+// measurement references are already full resource names in YAML and pass
+// through unchanged.
 type Refs struct {
 	EntityByDisplay map[string]string // "user" -> "entities/abc"
 }
@@ -53,6 +51,7 @@ var preferredDirections = map[string]string{
 // wireFactTable maps a desired fact table to its API shape.
 func wireFactTable(d DesiredFactTable, refs Refs) (*confidence.FactTable, error) {
 	ft := &confidence.FactTable{
+		Name:            d.Def.Name,
 		SQL:             d.SQL,
 		DisplayName:     d.Def.DisplayName,
 		Description:     string(d.Def.Description),
@@ -90,16 +89,17 @@ func wireFactTable(d DesiredFactTable, refs Refs) (*confidence.FactTable, error)
 }
 
 // wireMeasurement maps a desired measurement to its API shape.
-func wireMeasurement(d DesiredMeasurement, factTable schema.FactTable, refs Refs) (*confidence.Measurement, error) {
+func wireMeasurement(d DesiredMeasurement, factTable confidence.FactTable, refs Refs) (*confidence.Measurement, error) {
 	entityRef, ok := refs.EntityByDisplay[d.Def.Entity]
 	if !ok {
 		return nil, fmt.Errorf("entity %q does not exist in the Confidence account", d.Def.Entity)
 	}
 	m := &confidence.Measurement{
+		Name:        d.Def.Name,
 		DisplayName: d.Def.DisplayName,
 		Description: string(d.Def.Description),
 		Entity:      entityRef,
-		FactTable:   d.Def.FactTable, // display name; ApplyMetricsSync resolves
+		FactTable:   d.Def.FactTable,
 		Owner:       d.Def.Owner,
 	}
 	m.Labels = d.Def.Labels
@@ -192,19 +192,19 @@ func wireMeasurement(d DesiredMeasurement, factTable schema.FactTable, refs Refs
 }
 
 // wireMetric maps a desired metric to its API shape. The measurement
-// reference is the DISPLAY NAME (ApplyMetricsSync resolves it, including for
-// measurements created in the same request); `source` is set by the server
-// from the request reference — never by the client.
+// reference is already a resource name; `source` is set by the server from
+// the request reference — never by the client.
 func wireMetric(d DesiredMetric, refs Refs) (*confidence.Metric, error) {
 	entityRef, ok := refs.EntityByDisplay[d.Entity]
 	if !ok {
 		return nil, fmt.Errorf("entity %q does not exist in the Confidence account", d.Entity)
 	}
 	m := &confidence.Metric{
+		Name:        d.Name,
 		DisplayName: d.DisplayName,
 		Description: d.Description,
 		Entity:      entityRef,
-		Measurement: d.Measurement, // display name; server resolves
+		Measurement: d.Measurement,
 		Owner:       d.Owner,
 		Labels:      d.Labels,
 	}
@@ -366,15 +366,15 @@ func wireFilter(filters []schema.Filter) (*confidence.Filter, error) {
 
 // measureColumn resolves a measure reference to the query-output column.
 // Matches by display name first; for unnamed measures, falls back to column name.
-func measureColumn(ft schema.FactTable, measureRef string) (string, error) {
+func measureColumn(ft confidence.FactTable, measureRef string) (string, error) {
 	for _, m := range ft.Measures {
-		if m.DisplayName != "" && m.DisplayName == measureRef {
-			return measureColumnName(ft, m), nil
+		if m.DisplayName != "" && m.DisplayName == measureRef && m.Column != nil {
+			return m.Column.Name, nil
 		}
 	}
 	for _, m := range ft.Measures {
-		if m.DisplayName == "" && m.Column == measureRef {
-			return measureColumnName(ft, m), nil
+		if m.DisplayName == "" && m.Column != nil && m.Column.Name == measureRef {
+			return m.Column.Name, nil
 		}
 	}
 	return "", fmt.Errorf("measure %q is not defined on fact table %q", measureRef, ft.DisplayName)

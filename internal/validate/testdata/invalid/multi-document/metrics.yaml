@@ -1,9 +1,11 @@
 metrics:
-  - display_name: First Doc
+  - name: metrics/first-doc
+    display_name: First Doc
     entity: user
-    measurement: M
+    measurement: measurements/m
 ---
 metrics:
-  - display_name: Second Doc
+  - name: metrics/second-doc
+    display_name: Second Doc
     entity: user
-    measurement: M
+    measurement: measurements/m

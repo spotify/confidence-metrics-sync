@@ -1,4 +1,7 @@
-testdata/invalid/duplicate-names/b.yaml:2:5: error[duplicate-name]: duplicate fact table name "Events" — already defined at testdata/invalid/duplicate-names/a.yaml:11
-testdata/invalid/duplicate-names/b.yaml:13:5: error[duplicate-name]: duplicate metric name "Conversion" — already defined at testdata/invalid/duplicate-names/a.yaml:8
-testdata/invalid/duplicate-names/b.yaml:18:5: error[duplicate-name]: duplicate measurement name "Shared Measurement" — already defined at testdata/invalid/duplicate-names/a.yaml:2
-✗ 3 error(s), 0 warning(s) in 2 file(s)
+testdata/invalid/duplicate-names/b.yaml:2:5: error[duplicate-name]: duplicate fact table name "factTables/events" — already defined at testdata/invalid/duplicate-names/a.yaml:13
+testdata/invalid/duplicate-names/b.yaml:3:5: error[duplicate-display-name]: duplicate fact table display name "Events" — already defined at testdata/invalid/duplicate-names/a.yaml:14
+testdata/invalid/duplicate-names/b.yaml:14:5: error[duplicate-name]: duplicate metric name "metrics/conversion" — already defined at testdata/invalid/duplicate-names/a.yaml:9
+testdata/invalid/duplicate-names/b.yaml:15:5: error[duplicate-display-name]: duplicate metric display name "Conversion" — already defined at testdata/invalid/duplicate-names/a.yaml:10
+testdata/invalid/duplicate-names/b.yaml:20:5: error[duplicate-name]: duplicate measurement name "measurements/shared" — already defined at testdata/invalid/duplicate-names/a.yaml:2
+testdata/invalid/duplicate-names/b.yaml:21:5: error[duplicate-display-name]: duplicate measurement display name "Shared Measurement" — already defined at testdata/invalid/duplicate-names/a.yaml:3
+✗ 6 error(s), 0 warning(s) in 2 file(s)

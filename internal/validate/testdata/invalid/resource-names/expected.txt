@@ -1,0 +1,9 @@
+testdata/invalid/resource-names/metrics.yaml:2:5: error[schema]: fact_tables[0]: missing property 'name'
+testdata/invalid/resource-names/metrics.yaml:13:5: error[schema]: measurements[0].name: 'metrics/wrong-prefix' does not match pattern '^measurements/[^/\\s]+$'
+testdata/invalid/resource-names/metrics.yaml:15:5: error[unknown-fact-table]: measurement "Wrong Prefix" references fact table "Missing Name", which is not defined in this repository
+testdata/invalid/resource-names/metrics.yaml:15:5: error[schema]: measurements[0].fact_table: 'Missing Name' does not match pattern '^factTables/[^/\\s]+$'
+testdata/invalid/resource-names/metrics.yaml:20:9: error[schema]: measurements[0].metrics[0]: missing property 'name'
+testdata/invalid/resource-names/metrics.yaml:23:5: error[schema]: metrics[0].name: 'metrics/too/many-segments' does not match pattern '^metrics/[^/\\s]+$'
+testdata/invalid/resource-names/metrics.yaml:26:5: error[unknown-measurement]: metric "Bad Metric Name" references measurement "Wrong Prefix", which is not defined in this repository
+testdata/invalid/resource-names/metrics.yaml:26:5: error[schema]: metrics[0].measurement: 'Wrong Prefix' does not match pattern '^measurements/[^/\\s]+$'
+✗ 8 error(s), 0 warning(s) in 1 file(s)

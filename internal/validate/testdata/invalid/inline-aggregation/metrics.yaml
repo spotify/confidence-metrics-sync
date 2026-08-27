@@ -1,5 +1,6 @@
 metrics:
-  - display_name: Inline Attempt
+  - name: metrics/inline-attempt
+    display_name: Inline Attempt
     entity: user
     numerator:
       measure: value

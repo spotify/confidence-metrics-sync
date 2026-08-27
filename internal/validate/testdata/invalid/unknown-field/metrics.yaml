@@ -1,5 +1,6 @@
 metrics:
-  - display_name: Some Metric
+  - name: metrics/some-metric
+    display_name: Some Metric
     entity: user
-    measurement: Some Measurement
+    measurement: measurements/some-measurement
     prefered_direction: increase

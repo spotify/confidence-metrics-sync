@@ -14,46 +14,66 @@ type located struct {
 	pointer string
 }
 
-// semantic runs cross-reference checks across ALL files: duplicate names and
-// dangling references. References are resolved within the repository —
-// definitions are expected to be self-contained (fact tables, measurements,
-// and metrics travel together).
+// semantic runs cross-reference checks across ALL files. Resource names are
+// identity; display names remain unique as a separate authoring rule.
+// Definitions are expected to be self-contained: relationships must resolve
+// to resources declared somewhere in the repository snapshot.
 func semantic(files []*parser.File) []report.Diagnostic {
 	var diags []report.Diagnostic
 
 	factTables := map[string]located{}
 	factTableDefs := map[string]schema.FactTable{}
+	factTableDisplayNames := map[string]located{}
 	measurements := map[string]located{}
 	measurementDefs := map[string]schema.Measurement{}
+	measurementDisplayNames := map[string]located{}
 	metrics := map[string]located{}
+	metricDisplayNames := map[string]located{}
 
 	// Pass 1: collect names, flag duplicates.
 	for _, f := range files {
 		for i, ft := range f.Def.FactTables {
 			diags = append(diags, checkColumnDuplicates(f, i, ft)...)
-			ptr := fmt.Sprintf("/fact_tables/%d/display_name", i)
-			if prev, dup := factTables[ft.DisplayName]; dup {
-				diags = append(diags, dupDiag(f, ptr, "fact table", ft.DisplayName, prev))
-				continue
+			namePtr := fmt.Sprintf("/fact_tables/%d/name", i)
+			if prev, dup := factTables[ft.Name]; ft.Name != "" && dup {
+				diags = append(diags, dupDiag(f, namePtr, "fact table", ft.Name, prev))
+			} else if ft.Name != "" {
+				factTables[ft.Name] = located{f, namePtr}
+				factTableDefs[ft.Name] = ft
 			}
-			factTables[ft.DisplayName] = located{f, ptr}
-			factTableDefs[ft.DisplayName] = ft
+			displayPtr := fmt.Sprintf("/fact_tables/%d/display_name", i)
+			if prev, dup := factTableDisplayNames[ft.DisplayName]; dup {
+				diags = append(diags, dupDisplayNameDiag(f, displayPtr, "fact table", ft.DisplayName, prev))
+			} else {
+				factTableDisplayNames[ft.DisplayName] = located{f, displayPtr}
+			}
 		}
 		for i, m := range f.Def.Measurements {
-			ptr := fmt.Sprintf("/measurements/%d/display_name", i)
-			if prev, dup := measurements[m.DisplayName]; dup {
-				diags = append(diags, dupDiag(f, ptr, "measurement", m.DisplayName, prev))
-				continue
+			namePtr := fmt.Sprintf("/measurements/%d/name", i)
+			if prev, dup := measurements[m.Name]; m.Name != "" && dup {
+				diags = append(diags, dupDiag(f, namePtr, "measurement", m.Name, prev))
+			} else if m.Name != "" {
+				measurements[m.Name] = located{f, namePtr}
+				measurementDefs[m.Name] = m
 			}
-			measurements[m.DisplayName] = located{f, ptr}
-			measurementDefs[m.DisplayName] = m
+			displayPtr := fmt.Sprintf("/measurements/%d/display_name", i)
+			if prev, dup := measurementDisplayNames[m.DisplayName]; dup {
+				diags = append(diags, dupDisplayNameDiag(f, displayPtr, "measurement", m.DisplayName, prev))
+			} else {
+				measurementDisplayNames[m.DisplayName] = located{f, displayPtr}
+			}
 		}
 		eachMetric(f, func(ptr string, mt schema.Metric, _ *schema.Measurement) {
-			if prev, dup := metrics[mt.DisplayName]; dup {
-				diags = append(diags, dupDiag(f, ptr+"/display_name", "metric", mt.DisplayName, prev))
-				return
+			if prev, dup := metrics[mt.Name]; mt.Name != "" && dup {
+				diags = append(diags, dupDiag(f, ptr+"/name", "metric", mt.Name, prev))
+			} else if mt.Name != "" {
+				metrics[mt.Name] = located{f, ptr + "/name"}
 			}
-			metrics[mt.DisplayName] = located{f, ptr + "/display_name"}
+			if prev, dup := metricDisplayNames[mt.DisplayName]; dup {
+				diags = append(diags, dupDisplayNameDiag(f, ptr+"/display_name", "metric", mt.DisplayName, prev))
+			} else {
+				metricDisplayNames[mt.DisplayName] = located{f, ptr + "/display_name"}
+			}
 		})
 	}
 
@@ -194,6 +214,12 @@ func dupDiag(f *parser.File, ptr, kind, name string, prev located) report.Diagno
 	prevPos := prev.file.Position(prev.pointer)
 	return diag(f, ptr, "duplicate-name",
 		fmt.Sprintf("duplicate %s name %q — already defined at %s:%d", kind, name, prev.file.Path, prevPos.Line))
+}
+
+func dupDisplayNameDiag(f *parser.File, ptr, kind, name string, prev located) report.Diagnostic {
+	prevPos := prev.file.Position(prev.pointer)
+	return diag(f, ptr, "duplicate-display-name",
+		fmt.Sprintf("duplicate %s display name %q — already defined at %s:%d", kind, name, prev.file.Path, prevPos.Line))
 }
 
 func hasEntity(ft schema.FactTable, entity string) bool {

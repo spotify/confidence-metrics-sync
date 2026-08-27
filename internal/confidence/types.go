@@ -36,7 +36,7 @@ type Measure struct {
 
 // FactTable is a queryable set of facts.
 type FactTable struct {
-	Name            string                `json:"name,omitempty"` // server-assigned, e.g. "factTables/xyz"
+	Name            string                `json:"name,omitempty"` // caller-selected in sync requests, e.g. "factTables/xyz"
 	SQL             string                `json:"sql,omitempty"`
 	DisplayName     string                `json:"displayName,omitempty"`
 	Description     string                `json:"description,omitempty"`
@@ -196,11 +196,11 @@ type NullHandlingConfig struct {
 
 // Measurement is a reusable aggregation spec.
 type Measurement struct {
-	Name          string              `json:"name,omitempty"` // server-assigned, e.g. "measurements/xyz"
+	Name          string              `json:"name,omitempty"` // caller-selected in sync requests, e.g. "measurements/xyz"
 	DisplayName   string              `json:"displayName,omitempty"`
 	Description   string              `json:"description,omitempty"`
 	Entity        string              `json:"entity,omitempty"`    // resource name
-	FactTable     string              `json:"factTable,omitempty"` // display name in sync requests (server resolves); resource name in responses
+	FactTable     string              `json:"factTable,omitempty"` // resource name
 	TypeSpec      *TypeSpec           `json:"typeSpec,omitempty"`
 	Filter        *Filter             `json:"filter,omitempty"`
 	NullHandling  *NullHandlingConfig `json:"nullHandling,omitempty"`
@@ -238,7 +238,7 @@ type MetricSource struct {
 
 // Metric is the experiment-facing metric resource.
 type Metric struct {
-	Name                    string                   `json:"name,omitempty"` // server-assigned, e.g. "metrics/xyz"
+	Name                    string                   `json:"name,omitempty"` // caller-selected in sync requests, e.g. "metrics/xyz"
 	DisplayName             string                   `json:"displayName,omitempty"`
 	Description             string                   `json:"description,omitempty"`
 	Entity                  string                   `json:"entity,omitempty"`      // resource name

@@ -78,6 +78,8 @@ func TestValidateJSONOutput(t *testing.T) {
 		Diagnostics []struct {
 			File string `json:"file"`
 			Rule string `json:"rule"`
+			Line int    `json:"line"`
+			Col  int    `json:"col"`
 		} `json:"diagnostics"`
 		Summary struct {
 			Errors int `json:"errors"`
@@ -88,6 +90,23 @@ func TestValidateJSONOutput(t *testing.T) {
 	}
 	if parsed.Summary.Errors == 0 || len(parsed.Diagnostics) == 0 {
 		t.Fatalf("expected errors in JSON output: %s", out)
+	}
+	wantRules := map[string]bool{
+		"unknown-fact-table":  false,
+		"unknown-measurement": false,
+	}
+	for _, diagnostic := range parsed.Diagnostics {
+		if _, ok := wantRules[diagnostic.Rule]; ok {
+			wantRules[diagnostic.Rule] = true
+			if diagnostic.File == "" || diagnostic.Line == 0 || diagnostic.Col == 0 {
+				t.Errorf("%s is not positioned: %+v", diagnostic.Rule, diagnostic)
+			}
+		}
+	}
+	for rule, found := range wantRules {
+		if !found {
+			t.Errorf("JSON output is missing %s: %s", rule, out)
+		}
 	}
 }
 

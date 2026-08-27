@@ -2,7 +2,8 @@
 # Exercises unnamed measures (display_name optional, column is the reference).
 
 fact_tables:
-  - display_name: Simple Events
+  - name: factTables/simple-events
+    display_name: Simple Events
     sql: SELECT user_id, ts, value FROM events
     timestamp_column: ts
     entities:
@@ -12,8 +13,9 @@ fact_tables:
       - column: value
 
 measurements:
-  - display_name: Simple Sum
-    fact_table: Simple Events
+  - name: measurements/simple-sum
+    display_name: Simple Sum
+    fact_table: factTables/simple-events
     entity: user
     measure: value
     operation: sum
