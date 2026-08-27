@@ -35,7 +35,7 @@ runs:
       shell: bash
       env:
         CONFIDENCE_METRICS_RELEASE_ROOT: https://github.com/spotify/confidence-metrics-sync/releases/download
-        CONFIDENCE_METRICS_VERSION: 1.0.0 # x-release-please-version
+        CONFIDENCE_METRICS_VERSION: 1.1.0 # x-release-please-version
       run: "$GITHUB_ACTION_PATH/scripts/install.sh"
 
     - name: Run Confidence metrics
